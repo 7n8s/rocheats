@@ -18,7 +18,7 @@ echo "[2/6] link"
 "$BT/aapt2" link -o $OUT/base.apk -I "$JAR" \
     --manifest AndroidManifest.xml \
     --min-sdk-version 23 --target-sdk-version 34 \
-    --version-code 1 --version-name 2.0.0 \
+    --version-code 3 --version-name 2.2.0 \
     $OUT/res.zip
 (cd $OUT && unzip -qo base.apk classes.dex 2>/dev/null || true)
 
@@ -37,8 +37,8 @@ cp $OUT/base.apk $OUT/unsigned.apk
 
 echo "[6/6] align + sign"
 "$BT/zipalign" -f -p 4 $OUT/unsigned.apk $OUT/aligned.apk
-KS=keystore.jks
-if [ ! -f $KS ]; then
+KS=${ANDROID_KEYSTORE:-keystore.jks}
+if [ ! -f "$KS" ]; then
   keytool -genkeypair -keystore $KS -alias rcm -keyalg RSA -keysize 2048 \
           -validity 10950 -storepass rocheats -keypass rocheats \
           -dname "CN=RoCheats Monitor, O=RoCheats, C=GB" >/dev/null 2>&1

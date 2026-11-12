@@ -1,0 +1,122 @@
+name: Build
+
+# Builds all three editions and attaches them to a release.
+#   - push to main/master, or the Run workflow button  -> artifacts only
+#   - push a tag like v2.2.0                            -> artifacts + a GitHub Release
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Windows .exe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MinGW-w64
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 python3-pil
+
+      - name: Build
+        run: bash build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RoCheatsMonitor-Windows
+          path: RoCheatsMonitor.exe
+          if-no-files-found: error
+
+  android:
+    name: Android .apk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install SDK build-tools 34 and platform 34
+        run: |
+          set -euo pipefail
+          SDK=$RUNNER_TEMP/sdk
+          mkdir -p "$SDK/build-tools" "$SDK/platforms"
+          curl -sSLo "$RUNNER_TEMP/bt.zip" https://dl.google.com/android/repository/build-tools_r34-linux.zip
+          curl -sSLo "$RUNNER_TEMP/plat.zip" https://dl.google.com/android/repository/platform-34-ext7_r03.zip
+          unzip -q "$RUNNER_TEMP/bt.zip" -d "$RUNNER_TEMP/bt"
+          unzip -q "$RUNNER_TEMP/plat.zip" -d "$RUNNER_TEMP/plat"
+          mv "$RUNNER_TEMP"/bt/android-14 "$SDK/build-tools/34.0.0"
+          mv "$RUNNER_TEMP"/plat/android-34 "$SDK/platforms/android-34"
+          chmod +x "$SDK/build-tools/34.0.0"/* 2>/dev/null || true
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+
+      # Optional: add the keystore as base64 in a secret named ANDROID_KEYSTORE_B64
+      # so releases keep the same signing identity. Without it the build makes a
+      # throwaway key and the APK will not update over an installed copy.
+      - name: Restore signing key
+        if: ${{ secrets.ANDROID_KEYSTORE_B64 != '' }}
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > android/keystore.jks
+          echo "ANDROID_KEYSTORE=keystore.jks" >> "$GITHUB_ENV"
+
+      - name: Build
+        working-directory: android
+        run: bash build-apk.sh
+
+      - name: Note the signing certificate
+        run: unzip -l RoCheatsMonitor.apk | grep -c META-INF || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RoCheatsMonitor-Android
+          path: RoCheatsMonitor.apk
+          if-no-files-found: error
+
+  web:
+    name: Web bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zip the site
+        run: |
+          set -euo pipefail
+          cd web
+          zip -qr "$GITHUB_WORKSPACE/RoCheatsMonitor-web.zip" index.html styles.css app.js assets
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RoCheatsMonitor-Web
+          path: RoCheatsMonitor-web.zip
+          if-no-files-found: error
+
+  release:
+    name: Release (tags only)
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, android, web]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Show what will be published
+        run: ls -lh dist
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/RoCheatsMonitor.exe
+            dist/RoCheatsMonitor.apk
+            dist/RoCheatsMonitor-web.zip
+          generate_release_notes: true
+          fail_on_unmatched_files: true

@@ -1,0 +1,14 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer-when-downgrade
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+
+/assets/*
+  Cache-Control: public, max-age=604800, immutable
+
+/app.js
+  Cache-Control: public, max-age=300
+
+/styles.css
+  Cache-Control: public, max-age=300

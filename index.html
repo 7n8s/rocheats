@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>RoCheats Monitor — WEAO status checker</title>
+<meta name="description" content="Live status of nine Roblox executors, plus the current Roblox client build. Updated every few minutes.">
+<meta name="theme-color" content="#0A0C0D">
+<link rel="icon" href="assets/mark.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/mark.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="titlebar">
+  <div class="brand">
+    <img class="mark" src="assets/mark.png" alt="" width="26" height="26">
+    <h1>RoCheats Monitor</h1>
+    <span class="live" id="livePill"><i></i>LIVE</span>
+  </div>
+  <button class="icon-btn" id="settingsBtn" aria-label="Settings" aria-expanded="false">
+    <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" fill="none"
+         stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+      <circle cx="12" cy="12" r="3.2"></circle>
+      <path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6"></path>
+    </svg>
+  </button>
+</header>
+
+<main id="main">
+  <!-- hero -->
+  <section class="hero" id="hero">
+    <div class="hero-head">
+      <div>
+        <p class="eyebrow accent">WEAO Status</p>
+        <h2 id="headline">Checking…</h2>
+      </div>
+      <button class="btn btn-ghost" id="checkBtn">
+        <svg class="spin" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M20 12a8 8 0 1 1-2.4-5.7"></path>
+        </svg>
+        <span>Check now</span>
+      </button>
+    </div>
+
+    <ul class="stats" id="stats">
+      <li><b>—</b><span>updated</span></li>
+      <li><b>—</b><span>stale</span></li>
+      <li><b>—</b><span>detected</span></li>
+      <li><b>—</b><span>behind Roblox</span></li>
+    </ul>
+
+    <p class="meta" id="meta">Reading the feed…</p>
+
+    <div class="rbx" id="rbx" hidden>
+      <i class="dot" id="rbxDot"></i>
+      <span class="caps">Roblox</span>
+      <b id="rbxVersion">—</b>
+      <span class="right" id="rbxCurrent">—</span>
+    </div>
+  </section>
+
+  <!-- toolbar -->
+  <div class="toolbar">
+    <div class="chips" role="tablist" aria-label="Filter">
+      <button role="tab" aria-selected="true" class="chip is-on" data-filter="0">All</button>
+      <button role="tab" aria-selected="false" class="chip" data-filter="1">Updated</button>
+      <button role="tab" aria-selected="false" class="chip" data-filter="2">Not updated</button>
+    </div>
+    <span class="count" id="count">9 of 9 products</span>
+  </div>
+
+  <!-- list -->
+  <ul class="rows" id="rows" aria-live="polite"></ul>
+
+  <div class="empty" id="empty" hidden>
+    <p><b id="emptyTitle">Can’t reach the feed</b></p>
+    <p id="emptyBody">Check your connection and try again.</p>
+    <div class="empty-actions">
+      <button class="btn btn-accent" id="retryBtn">Retry</button>
+      <a class="link" href="?demo=1">Preview with sample data</a>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <span>Status from <a href="https://weao.xyz" target="_blank" rel="noopener">WEAO</a> ·
+      Roblox build from <a href="https://clientsettingscdn.roblox.com" target="_blank" rel="noopener">Roblox</a></span>
+    <span id="footNote">Checks only while this tab is open</span>
+  </footer>
+</main>
+
+<!-- settings -->
+<div class="scrim" id="scrim" hidden></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Settings" hidden>
+  <div class="grabber"></div>
+  <div class="sheet-head">
+    <h2>Appearance</h2>
+    <button class="icon-btn close" id="closeBtn" aria-label="Close settings">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"
+           stroke-width="1.7" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+    </button>
+  </div>
+
+  <p class="eyebrow">Background</p>
+  <div class="scenes" id="scenes"></div>
+
+  <p class="eyebrow">Accent</p>
+  <div class="accents" id="accents"></div>
+
+  <div class="seg" id="themeSeg" role="group" aria-label="Theme">
+    <button data-theme="glass" class="is-on">Glass</button>
+    <button data-theme="flat">Flat</button>
+  </div>
+
+  <p class="eyebrow tight">Check every</p>
+  <div class="seg row-seg" id="intervalSeg" role="group" aria-label="Check interval"></div>
+
+  <div class="switches">
+    <label class="switch">
+      <span><b>Notifications</b><small>Tell me when an executor or Roblox changes</small></span>
+      <input type="checkbox" id="notifToggle">
+      <i></i>
+    </label>
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" id="testNotifBtn">Send a test notification</button>
+    </div>
+  </div>
+</aside>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

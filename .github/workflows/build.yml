@@ -36,6 +36,11 @@ jobs:
   android:
     name: Android .apk
     runs-on: ubuntu-latest
+    # The secrets context is not allowed inside an `if:` expression (that
+    # rejected the whole file, producing a run with zero jobs). Copying it into
+    # a job-level env var makes it testable instead.
+    env:
+      KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
     steps:
       - uses: actions/checkout@v4
 
@@ -62,9 +67,9 @@ jobs:
       # so releases keep the same signing identity. Without it the build makes a
       # throwaway key and the APK will not update over an installed copy.
       - name: Restore signing key
-        if: ${{ secrets.ANDROID_KEYSTORE_B64 != '' }}
+        if: ${{ env.KEYSTORE_B64 != '' }}
         run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > android/keystore.jks
+          printf '%s' "$KEYSTORE_B64" | base64 -d > android/keystore.jks
           echo "ANDROID_KEYSTORE=keystore.jks" >> "$GITHUB_ENV"
 
       - name: Build

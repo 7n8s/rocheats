@@ -1,0 +1,35 @@
+# build output: these are produced by build.sh / build-apk.sh, not source
+*.exe
+*.o
+*.apk
+*.idsig
+*.zip
+RoCheatsMonitor/
+*.png.tmp
+
+# keep the files the READMEs embed
+!preview.png
+!preview-settings.png
+!web/preview-*.png
+!android/preview-*.png
+
+# desktop-preview build output
+android/desktop-preview/out/
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+__pycache__/
+*.pyc
+
+# android build tree
+android/build/
+*.class
+
+# signing material must never be in the repo
+*.jks
+*.keystore
+
+# raw renderer output (preview-*.png is the curated set)
+android/android-*.png

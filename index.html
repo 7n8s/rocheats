@@ -117,12 +117,43 @@
   <p class="eyebrow tight">Check every</p>
   <div class="seg row-seg" id="intervalSeg" role="group" aria-label="Check interval"></div>
 
+  <p class="eyebrow tight">Density</p>
+  <div class="seg" id="densitySeg" role="group" aria-label="Density">
+    <button data-density="comfortable" class="is-on">Comfortable</button>
+    <button data-density="compact">Compact</button>
+  </div>
+
   <div class="switches">
     <label class="switch">
       <span><b>Notifications</b><small>Tell me when an executor or Roblox changes</small></span>
       <input type="checkbox" id="notifToggle">
       <i></i>
     </label>
+
+    <div class="alerts" id="alertList">
+      <p class="eyebrow tight">Tell me about</p>
+      <label class="switch sub">
+        <span><small>Status changes (updated / not updated)</small></span>
+        <input type="checkbox" data-alert="updates">
+        <i></i>
+      </label>
+      <label class="switch sub">
+        <span><small>New executor versions</small></span>
+        <input type="checkbox" data-alert="versions">
+        <i></i>
+      </label>
+      <label class="switch sub">
+        <span><small>Detection changes</small></span>
+        <input type="checkbox" data-alert="detection">
+        <i></i>
+      </label>
+      <label class="switch sub">
+        <span><small>Roblox client updates</small></span>
+        <input type="checkbox" data-alert="roblox">
+        <i></i>
+      </label>
+    </div>
+
     <div class="sheet-actions">
       <button class="btn btn-ghost" id="testNotifBtn">Send a test notification</button>
     </div>

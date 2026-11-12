@@ -672,6 +672,30 @@ body.sheet-open .toast.is-open { transform: translate(-50%, 0); }
   .stats { gap: 2px 16px; }
 }
 
+/* ---------------------------------------------- compact density
+ * Same rows, same type, less air: shrinks the hero, the gaps and the rows.
+ */
+[data-density="compact"] .row { min-height: 46px; padding: 5px 10px; }
+[data-density="compact"] .tile { width: 32px; height: 32px; border-radius: 8px; }
+[data-density="compact"] .rows { gap: 5px; }
+[data-density="compact"] .name { font-size: 12.5px; }
+[data-density="compact"] .sub { font-size: 11px; margin-top: 1px; }
+[data-density="compact"] .hero { padding: 14px 16px 13px; }
+[data-density="compact"] .hero h1,
+[data-density="compact"] .hero h2 { font-size: clamp(17px, 4.6vw, 22px); }
+[data-density="compact"] .stats { margin-top: 7px; font-size: 10.5px; }
+[data-density="compact"] .meta { margin-top: 5px; font-size: 10.5px; }
+[data-density="compact"] .rbx { margin-top: 8px; padding: 6px 10px; }
+[data-density="compact"] .toolbar { margin: 12px 0 8px; }
+[data-density="compact"] .when { display: none; }
+
+/* the per-event alert switches sit indented under the master switch */
+.alerts { margin-top: 4px; }
+.switch.sub { padding: 7px 0; opacity: .92; }
+.switch.sub small { font-size: 11.5px; color: var(--text2); }
+.switch.sub + .switch.sub { border-top: 1px solid rgba(255, 255, 255, .05); }
+.switches:has(#notifToggle:not(:checked)) .alerts { opacity: .45; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }

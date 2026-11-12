@@ -55,6 +55,8 @@
     const fallback = {
       scene: 'aurora', accent: '#7deeff', theme: 'glass',
       interval: 5, notifications: false,
+      density: 'comfortable',
+      alerts: { updates: true, versions: true, detection: true, roblox: true },
     };
     try {
       return Object.assign(fallback, JSON.parse(localStorage.getItem('rcm.web') || '{}'));
@@ -133,6 +135,21 @@
       };
       item.onLatest = !!item.rbx && !!state.roblox.upload && item.rbx === state.roblox.upload;
       if (prev && (prev.updated !== item.updated || prev.detected !== item.detected)) state.flash.add(key);
+      // per-event alerts: only on a real transition, never on the first poll
+      if (prev) {
+        if (settings.alerts.updates && prev.updated !== item.updated) {
+          notify(product.name + (item.updated ? ' updated' : ' broke'),
+            item.updated ? 'Back on the current build.' : 'Marked as not updated by the feed.');
+        }
+        if (settings.alerts.versions && item.version && prev.version !== item.version) {
+          notify(product.name + ' ' + item.version,
+            'New version, previously ' + (prev.version || 'unknown') + '.');
+        }
+        if (settings.alerts.detection && prev.detected !== item.detected) {
+          notify(product.name + (item.detected ? ' detected' : ' no longer detected'),
+            item.detected ? 'Hyperion is flagging it right now.' : 'The flag has cleared.');
+        }
+      }
       state.items.set(key, item);
       seen.add(key);
     }
@@ -179,7 +196,7 @@
       for (const item of state.items.values()) item.onLatest = !!item.rbx && item.rbx === upload;
       if (before && before !== upload) {
         state.newBuild = true;
-        notify('Roblox updated',
+        if (settings.alerts.roblox) notify('Roblox updated',
           (state.roblox.version ? 'Now on ' + state.roblox.version + '. ' : '') +
           'Executors may need to catch up.');
         pollFeed({ silent: true });   // every currency flag just changed
@@ -349,6 +366,9 @@
         lag.title = 'Behind the current Roblox build';
         sub.appendChild(lag);
       }
+    } else if (product.key === 'codex') {
+      // WEAO does not list Codex and codex.lol publishes no feed or API
+      sub.appendChild(el('span', 'ver', 'codex.lol · no public version feed'));
     } else if (item) {
       sub.appendChild(el('span', 'ver', 'not listed by the feed right now'));
     } else {
@@ -360,7 +380,7 @@
     const stateCell = el('div', 'state');
     if (!item || !item.live) {
       stateCell.classList.add('is-none');
-      stateCell.textContent = item ? 'No live source' : '—';
+      stateCell.textContent = product.key === 'codex' ? 'Not published' : (item ? 'No live source' : '—');
     } else {
       stateCell.classList.add(item.updated ? 'is-up' : 'is-down');
       stateCell.textContent = item.updated ? 'Updated' : 'Not updated';
@@ -391,6 +411,7 @@
     root.setProperty('--scene-b', scene.b);
     document.body.dataset.theme = settings.theme;
     document.documentElement.dataset.theme = settings.theme;
+    document.documentElement.dataset.density = settings.density || 'comfortable';
     const meta = document.querySelector('meta[name=theme-color]');
     if (meta) meta.setAttribute('content', '#0a0c0d');
   }
@@ -510,6 +531,28 @@
     for (const b of document.querySelectorAll('#intervalSeg button')) {
       b.classList.toggle('is-on', +b.dataset.interval === settings.interval);
     }
+    for (const b of document.querySelectorAll('#densitySeg button')) {
+      b.classList.toggle('is-on', b.dataset.density === (settings.density || 'comfortable'));
+    }
+    for (const b of document.querySelectorAll('[data-alert]')) {
+      b.checked = !!settings.alerts[b.dataset.alert];
+    }
+  }
+
+  for (const b of document.querySelectorAll('#densitySeg button')) {
+    b.addEventListener('click', () => {
+      settings.density = b.dataset.density;
+      saveSettings();
+      applySettings();
+      syncSettings();
+    });
+  }
+
+  for (const i of document.querySelectorAll('[data-alert]')) {
+    i.addEventListener('change', () => {
+      settings.alerts[i.dataset.alert] = i.checked;
+      saveSettings();
+    });
   }
 
   function openSheet() {
@@ -592,6 +635,7 @@
   setInterval(() => {
     if (!document.hidden) pollRoblox();
   }, ROBLOX_TICK);
+
 
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) return;

@@ -91,11 +91,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The site lives at the repo root (index.html, styles.css, app.js, assets/),
+      # which is also what GitHub Pages serves.
       - name: Zip the site
         run: |
           set -euo pipefail
-          cd web
-          zip -qr "$GITHUB_WORKSPACE/RoCheatsMonitor-web.zip" index.html styles.css app.js assets
+          zip -qr RoCheatsMonitor-web.zip index.html styles.css app.js assets
+          unzip -l RoCheatsMonitor-web.zip | tail -3
 
       - uses: actions/upload-artifact@v4
         with:

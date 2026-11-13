@@ -57,7 +57,7 @@ main{max-width:1100px;margin:auto;padding:56px 32px 36px}.page-intro{display:fle
 .shop-section{min-height:calc(100svh - 60px);display:flex;flex-direction:column;justify-content:center;margin-top:50px;padding-top:40px;padding-bottom:40px;scroll-snap-align:start;scroll-snap-stop:normal}
 @media(max-width:600px){.shop-section{min-height:100svh;margin-top:36px;padding-top:36px;padding-bottom:36px}}
 html.wheel-smoothing{scroll-behavior:auto!important;scroll-snap-type:none!important}
-/* Subtle one-time fade and lift, staggered per widget. Applied by JS only;
+/* Reversible fade and lift, staggered per widget. Applied by JS only;
    browsers without IntersectionObserver keep everything visible. */
 .reveal-pending{opacity:0;transform:translateY(16px);transition:opacity .68s cubic-bezier(.22,1,.36,1) var(--reveal-delay,0ms),transform .68s cubic-bezier(.22,1,.36,1) var(--reveal-delay,0ms),border-color .18s,background .18s}
 .reveal-pending.is-revealed,.reveal-pending:focus-within{opacity:1;transform:translateY(0)}
@@ -76,3 +76,9 @@ html.wheel-smoothing{scroll-behavior:auto!important;scroll-snap-type:none!import
 .faq-heading .eyebrow{margin-bottom:10px}.faq-heading h2{margin:0;font-size:clamp(25px,3.2vw,36px);letter-spacing:-.04em;line-height:1.15}.faq-heading p:not(.eyebrow){margin:10px 0 0;color:var(--text2);font-size:13px;line-height:1.5}.faq-index{font-size:9px;letter-spacing:.16em;color:var(--text3);font-weight:700;white-space:nowrap}
 .faq-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.faq-card{min-width:0;padding:22px;border:1px solid var(--surface-border);border-radius:17px;background:linear-gradient(145deg,rgba(225,255,243,.06),transparent 50%),var(--surface);box-shadow:0 12px 34px rgba(0,0,0,.1)}.faq-number{color:var(--accent);font-size:10px;letter-spacing:.14em;font-weight:750}.faq-card h3{margin:14px 0 13px;color:var(--text);font-size:16px;line-height:1.3;letter-spacing:-.02em}.faq-card ul{padding-left:18px;margin:0;color:var(--text2);font-size:13px;line-height:1.65}.faq-card li+li{margin-top:6px}.faq-card li::marker{color:var(--accent)}.faq-important{margin:18px 0 0;padding:17px 19px;border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:12px;background:color-mix(in srgb,var(--accent) 8%,transparent);color:var(--text2);font-size:12px;line-height:1.6}.faq-important strong{color:var(--accent);letter-spacing:.06em;font-size:10px}.faq-card,.faq-important{overflow-wrap:anywhere}[data-theme="flat"] .faq-card{background:var(--surface);box-shadow:none}
 @media(max-width:600px){.faq-section{padding:42px 0 34px}.faq-heading{margin-bottom:18px}.faq-heading h2{font-size:24px}.faq-heading p:not(.eyebrow){font-size:12px}.faq-index{display:none}.faq-grid{grid-template-columns:1fr;gap:10px}.faq-card{padding:18px}.faq-card h3{font-size:15px;margin:11px 0}.faq-card ul{font-size:12px}.faq-important{padding:14px 16px}}
+
+/* Items above the viewport leave upward; they return smoothly on scroll up. */
+.reveal-pending.is-above:not(:focus-within){transform:translateY(-16px);transition-delay:0ms}
+.row.reveal-pending.is-above:not(:focus-within){transform:translateY(-24px);transition-delay:0ms}
+[data-motion="reduced"] .reveal-pending.is-above:not(:focus-within),[data-motion="reduced"] .row.reveal-pending.is-above:not(:focus-within){opacity:1;transform:none;transition:none}
+@media(prefers-reduced-motion:reduce){.reveal-pending.is-above:not(:focus-within),.row.reveal-pending.is-above:not(:focus-within){opacity:1;transform:none;transition:none}}

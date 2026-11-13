@@ -88,12 +88,11 @@
     return n;
   };
 
-  // Each section enters once when it comes into view. Content stays visible if
-  // IntersectionObserver is unavailable; polling never replays an entrance.
-  const revealedKeys = new Set();
-  let revealObserver = null, rowRevealObserver = null;
+  // Reversible viewport fades. Content stays visible when the browser does
+  // not support IntersectionObserver or reduced motion is enabled.
+  let revealObserver = null, rowRevealObserver = null, headerRevealObserver = null;
   function observeReveal(node, key, delay = 0, observer = revealObserver) {
-    if (!node || !observer || revealedKeys.has(key)) return;
+    if (!node || !observer) return;
     node.dataset.revealKey = key;
     node.style.setProperty('--reveal-delay', `${delay}ms`);
     node.classList.add('reveal-pending');
@@ -103,20 +102,25 @@
     if (!('IntersectionObserver' in window)) return;
     const revealVisible = (entries, observer) => {
       for (const entry of entries) {
-        if (!entry.isIntersecting || entry.intersectionRatio < observer.thresholds[0]) continue;
-        revealedKeys.add(entry.target.dataset.revealKey);
-        entry.target.classList.add('is-revealed');
-        observer.unobserve(entry.target);
+        const visible = entry.isIntersecting && entry.intersectionRatio >= observer.thresholds[0];
+        // Exiting above moves up slightly; below enters from below.
+        const above = !visible && entry.boundingClientRect.bottom <= (entry.rootBounds?.top ?? 0) + entry.boundingClientRect.height * observer.thresholds[0];
+        entry.target.classList.toggle('is-above', above);
+        entry.target.classList.toggle('is-revealed', visible);
       }
     };
     revealObserver = new IntersectionObserver(revealVisible,
-      { threshold: 0.06, rootMargin: '0px 0px -5% 0px' });
-    // Product rows begin their own entrance once they are meaningfully inside
-    // the viewport, instead of animating just outside its bottom edge.
+      { threshold: 0.06, rootMargin: '-8% 0px -5% 0px' });
+    // Reveal individual rows/cards within the viewport; fade them out near
+    // the top and back in again when scrolling up.
     rowRevealObserver = new IntersectionObserver(revealVisible,
-      { threshold: 0.18, rootMargin: '0px 0px -9% 0px' });
+      { threshold: 0.18, rootMargin: '-10% 0px -9% 0px' });
+    // The header starts at the very top and must remain visible on page load.
+    headerRevealObserver = new IntersectionObserver(revealVisible,
+      { threshold: 0.06, rootMargin: '0px' });
+    observeReveal($('.titlebar'), 'header', 0, headerRevealObserver);
     [
-      ['.titlebar', 'header', 0], ['.page-intro', 'intro', 70],
+      ['.page-intro', 'intro', 70],
       ['.hero', 'overview', 140], ['.list-heading', 'list-heading', 190],
       ['.toolbar', 'filters', 240], ['.shop-heading', 'shop-heading', 0],
       ['.shop-all', 'shop-all', 0], ['.shop-disclaimer', 'shop-note', 0],
@@ -430,12 +434,20 @@
     if (sig !== lastRows) {
       lastRows = sig;
       const list = $('#rows');
+      // Carry the visual state across feed refreshes so a polling update does
+      // not make an already-visible row flash or replay its entrance.
+      const previous = new Map([...list.querySelectorAll('[data-reveal-key]')].map((n) =>
+        [n.dataset.revealKey, { visible: n.classList.contains('is-revealed'), above: n.classList.contains('is-above') }]));
       if (rowRevealObserver) list.querySelectorAll('[data-reveal-key]').forEach((n) => rowRevealObserver.unobserve(n));
       list.textContent = '';
       for (const [i, x] of shown.entries()) {
         const item = row(x.product, x.item);
+        const key = `row:${x.product.key}`;
+        const prior = previous.get(key);
+        if (prior && prior.visible) item.classList.add('is-revealed');
+        if (prior && prior.above) item.classList.add('is-above');
         list.appendChild(item);
-        observeReveal(item, `row:${x.product.key}`, Math.min(i % 3, 2) * 45, rowRevealObserver);
+        observeReveal(item, key, Math.min(i % 3, 2) * 45, rowRevealObserver);
       }
     }
 

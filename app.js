@@ -23,14 +23,24 @@
     { key: 'axis', name: 'AXIS', hue: 210 },
   ];
 
+  // Two independent colours are rendered in both the preview and backdrop.
   const SCENES = [
-    { id: 'aurora', label: 'Aurora', a: 'rgba(125,238,255,.17)', b: 'rgba(91,157,255,.10)' },
-    { id: 'midnight', label: 'Midnight', a: 'rgba(70,110,220,.22)', b: 'rgba(40,60,150,.14)' },
-    { id: 'ember', label: 'Ember', a: 'rgba(255,122,92,.18)', b: 'rgba(160,60,40,.12)' },
-    { id: 'forest', label: 'Forest', a: 'rgba(80,200,150,.16)', b: 'rgba(30,90,70,.12)' },
-    { id: 'carbon', label: 'Carbon', a: 'rgba(180,190,195,.09)', b: 'rgba(60,66,70,.10)' },
-    { id: 'ocean', label: 'Ocean', a: 'rgba(60,160,200,.18)', b: 'rgba(20,60,90,.14)' },
-    { id: 'ice', label: 'Ice', a: 'rgba(150,200,215,.16)', b: 'rgba(60,90,100,.12)' },
+    { id: 'aurora', label: 'Aurora', a: 'rgba(72,192,185,.40)', b: 'rgba(60,113,180,.30)' },
+    { id: 'midnight', label: 'Midnight', a: 'rgba(55,85,180,.48)', b: 'rgba(99,70,168,.32)' },
+    { id: 'ember', label: 'Ember', a: 'rgba(215,105,62,.42)', b: 'rgba(159,51,53,.30)' },
+    { id: 'forest', label: 'Forest', a: 'rgba(51,153,104,.42)', b: 'rgba(95,130,75,.30)' },
+    { id: 'carbon', label: 'Carbon', a: 'rgba(132,151,142,.24)', b: 'rgba(61,77,75,.18)' },
+    { id: 'ocean', label: 'Ocean', a: 'rgba(29,148,189,.45)', b: 'rgba(42,95,175,.30)' },
+    { id: 'ice', label: 'Ice', a: 'rgba(155,214,229,.39)', b: 'rgba(94,144,186,.28)' },
+    { id: 'orchid', label: 'Orchid', a: 'rgba(169,89,194,.44)', b: 'rgba(99,74,178,.31)' },
+    { id: 'rose', label: 'Rose', a: 'rgba(218,100,137,.40)', b: 'rgba(146,65,97,.30)' },
+    { id: 'sunset', label: 'Sunset', a: 'rgba(234,136,65,.43)', b: 'rgba(190,65,107,.30)' },
+    { id: 'lagoon', label: 'Lagoon', a: 'rgba(51,183,171,.44)', b: 'rgba(43,111,129,.32)' },
+    { id: 'moss', label: 'Moss', a: 'rgba(145,165,70,.40)', b: 'rgba(51,127,95,.27)' },
+    { id: 'violet', label: 'Violet', a: 'rgba(117,95,206,.45)', b: 'rgba(99,59,153,.30)' },
+    { id: 'copper', label: 'Copper', a: 'rgba(176,104,60,.44)', b: 'rgba(112,78,51,.30)' },
+    { id: 'slate', label: 'Slate', a: 'rgba(100,148,153,.38)', b: 'rgba(69,89,123,.28)' },
+    { id: 'noir', label: 'Noir', a: 'rgba(74,88,81,.18)', b: 'rgba(30,42,40,.12)' },
   ];
 
   const ACCENTS = ['#7deeff', '#5b9dff', '#8a6bff', '#6fe7c4', '#f5c46c', '#ff8fa3'];
@@ -55,11 +65,12 @@
     const fallback = {
       scene: 'aurora', accent: '#7deeff', theme: 'glass',
       interval: 5, notifications: false,
-      density: 'comfortable',
+      density: 'comfortable', strength: 100, reducedMotion: false,
       alerts: { updates: true, versions: true, detection: true, roblox: true },
     };
     try {
-      return Object.assign(fallback, JSON.parse(localStorage.getItem('rcm.web') || '{}'));
+      const saved = JSON.parse(localStorage.getItem('rcm.web') || '{}');
+      return { ...fallback, ...saved, alerts: { ...fallback.alerts, ...(saved.alerts || {}) } };
     } catch (e) {
       return fallback;
     }
@@ -288,7 +299,9 @@
     }
 
     // pill + buttons
-    $('#livePill').classList.toggle('is-stale', !!state.error);
+    const livePill = $('#livePill');
+    livePill.classList.toggle('is-stale', !!state.error);
+    livePill.lastChild.textContent = state.demo ? 'DEMO' : (state.error ? 'OFFLINE' : (state.checkedAt ? 'LIVE' : 'CHECKING'));
     $('#checkBtn').classList.toggle('is-busy', state.checking);
 
     // rows
@@ -409,6 +422,14 @@
     const root = document.documentElement.style;
     root.setProperty('--scene-a', scene.a);
     root.setProperty('--scene-b', scene.b);
+    root.setProperty('--strength', String(Math.max(20, Math.min(100, Number(settings.strength) || 100)) / 100));
+    let image = '';
+    try { image = localStorage.getItem('rcm.web.image') || ''; } catch (_) {}
+    // Only images we read from the local file picker are used as CSS URLs.
+    const validImage = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(image);
+    root.setProperty('--scene-image', settings.scene === 'custom' && validImage
+      ? `linear-gradient(rgba(5,12,11,.38), rgba(5,12,11,.6)), url("${image}")` : 'none');
+    document.documentElement.dataset.motion = settings.reducedMotion ? 'reduced' : 'normal';
     document.body.dataset.theme = settings.theme;
     document.documentElement.dataset.theme = settings.theme;
     document.documentElement.dataset.density = settings.density || 'comfortable';
@@ -421,7 +442,7 @@
     scenes.textContent = '';
     for (const s of SCENES) {
       const b = el('button', 'swatch');
-      b.style.background = `radial-gradient(120% 80% at 30% 10%, ${s.a}, #101314 70%)`;
+      b.style.background = `radial-gradient(ellipse at 15% 15%, ${s.a}, transparent 70%), radial-gradient(ellipse at 85% 85%, ${s.b}, transparent 70%), #101917`;
       b.appendChild(el('span', '', s.label));
       b.type = 'button';
       b.addEventListener('click', () => {
@@ -433,6 +454,17 @@
       b.dataset.scene = s.id;
       scenes.appendChild(b);
     }
+    const custom = el('button', 'swatch', '');
+    custom.type = 'button';
+    custom.dataset.scene = 'custom';
+    custom.appendChild(el('span', '', 'Your image'));
+    custom.addEventListener('click', () => {
+      let image = '';
+      try { image = localStorage.getItem('rcm.web.image') || ''; } catch (_) {}
+      if (!image) { $('#imageInput').click(); return; }
+      settings.scene = 'custom'; saveSettings(); applySettings(); syncSettings();
+    });
+    scenes.appendChild(custom);
 
     const accents = $('#accents');
     accents.textContent = '';
@@ -511,33 +543,98 @@
 
     $('#settingsBtn').addEventListener('click', openSheet);
     $('#closeBtn').addEventListener('click', closeSheet);
-    $('#scrim').addEventListener('click', closeSheet);
+    // Deliberately do not close on outside click; use X or Escape.
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeSheet();
+      if ($('#sheet').hidden) return;
+      if (e.key === 'Escape') { closeSheet(); return; }
+      if (e.key !== 'Tab') return;
+      const focusable = [...$('#sheet').querySelectorAll('button:not([disabled]), input:not([disabled]):not([type=file]), a[href]')]
+        .filter((node) => node.getClientRects().length);
+      if (!focusable.length) return;
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !$('#sheet').contains(document.activeElement))) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
     });
     syncSettings();
   }
 
   function syncSettings() {
     for (const b of document.querySelectorAll('.swatch')) {
-      b.classList.toggle('is-on', b.dataset.scene === settings.scene);
+      const on = b.dataset.scene === settings.scene;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-pressed', String(on));
+      if (b.dataset.scene === 'custom') {
+        let image = '';
+        try { image = localStorage.getItem('rcm.web.image') || ''; } catch (_) {}
+        b.style.background = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(image)
+          ? `center / cover url("${image}")` : 'linear-gradient(135deg,#334b43,#151f1d)';
+        $('#removeImageBtn').hidden = !image;
+      }
     }
     for (const b of document.querySelectorAll('#accents button')) {
       b.classList.toggle('is-on', b.dataset.accent === settings.accent);
+      b.setAttribute('aria-pressed', String(b.dataset.accent === settings.accent));
     }
     for (const b of document.querySelectorAll('#themeSeg button')) {
       b.classList.toggle('is-on', b.dataset.theme === settings.theme);
+      b.setAttribute('aria-pressed', String(b.dataset.theme === settings.theme));
     }
     for (const b of document.querySelectorAll('#intervalSeg button')) {
       b.classList.toggle('is-on', +b.dataset.interval === settings.interval);
     }
     for (const b of document.querySelectorAll('#densitySeg button')) {
       b.classList.toggle('is-on', b.dataset.density === (settings.density || 'comfortable'));
+      b.setAttribute('aria-pressed', String(b.dataset.density === (settings.density || 'comfortable')));
     }
+    $('#sceneStrength').value = settings.strength || 100;
+    $('#sceneStrengthValue').textContent = (settings.strength || 100) + '%';
+    $('#motionToggle').checked = !!settings.reducedMotion;
+    $('#customAccent').value = /^#[0-9a-f]{6}$/i.test(settings.accent) ? settings.accent : '#7deeff';
     for (const b of document.querySelectorAll('[data-alert]')) {
       b.checked = !!settings.alerts[b.dataset.alert];
     }
   }
+
+  $('#sceneStrength').addEventListener('input', (e) => {
+    settings.strength = Number(e.target.value); saveSettings(); applySettings(); syncSettings();
+  });
+  $('#customAccent').addEventListener('input', (e) => {
+    settings.accent = e.target.value; saveSettings(); applySettings(); syncSettings();
+  });
+  $('#motionToggle').addEventListener('change', (e) => {
+    settings.reducedMotion = e.target.checked; saveSettings(); applySettings();
+  });
+  $('#resetAppearance').addEventListener('click', () => {
+    Object.assign(settings, { scene: 'aurora', accent: '#7deeff', theme: 'glass',
+      density: 'comfortable', strength: 100, reducedMotion: false });
+    saveSettings(); applySettings(); syncSettings(); toast('Appearance reset');
+  });
+  $('#imageInput').addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 1024 * 1024) {
+      toast('Choose a PNG, JPG or WebP under 1 MB.'); e.target.value = ''; return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        localStorage.setItem('rcm.web.image', String(reader.result));
+        settings.scene = 'custom'; saveSettings(); applySettings(); syncSettings();
+        toast('Background saved in this browser');
+      } catch (_) { toast('Not enough browser storage to save this image.'); }
+      e.target.value = '';
+    };
+    reader.onerror = () => { toast('Could not read that image.'); e.target.value = ''; };
+    reader.readAsDataURL(file);
+  });
+  $('#removeImageBtn').addEventListener('click', () => {
+    try { localStorage.removeItem('rcm.web.image'); } catch (_) {}
+    if (settings.scene === 'custom') settings.scene = 'aurora';
+    saveSettings(); applySettings(); syncSettings(); toast('Custom image removed');
+  });
 
   for (const b of document.querySelectorAll('#densitySeg button')) {
     b.addEventListener('click', () => {
@@ -566,6 +663,7 @@
     });
     $('#settingsBtn').setAttribute('aria-expanded', 'true');
     document.body.classList.add('sheet-open');
+    $('#closeBtn').focus();
   }
 
   function closeSheet() {
@@ -576,6 +674,7 @@
     scrim.classList.remove('is-open');
     $('#settingsBtn').setAttribute('aria-expanded', 'false');
     document.body.classList.remove('sheet-open');
+    $('#settingsBtn').focus();
     setTimeout(() => {
       if (!sheet.classList.contains('is-open')) {
         sheet.hidden = true;

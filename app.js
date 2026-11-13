@@ -306,9 +306,9 @@
 
     // rows
     const shown = items.filter((x) => {
-      if (!x.item) return state.filter === 0;
+      if (!x.item) return state.filter === 0 || (state.filter === 2 && x.product.key === 'codex');
       if (state.filter === 1) return x.item.live && x.item.updated;
-      if (state.filter === 2) return x.item.live && !x.item.updated;
+      if (state.filter === 2) return (x.item.live && !x.item.updated) || (x.product.key === 'codex' && !x.item.live);
       return true;
     });
 
@@ -381,7 +381,7 @@
       }
     } else if (product.key === 'codex') {
       // WEAO does not list Codex and codex.lol publishes no feed or API
-      sub.appendChild(el('span', 'ver', 'codex.lol · no public version feed'));
+      sub.appendChild(el('span', 'ver', 'Unverified · no public version feed'));
     } else if (item) {
       sub.appendChild(el('span', 'ver', 'not listed by the feed right now'));
     } else {
@@ -393,7 +393,13 @@
     const stateCell = el('div', 'state');
     if (!item || !item.live) {
       stateCell.classList.add('is-none');
-      stateCell.textContent = product.key === 'codex' ? 'Not published' : (item ? 'No live source' : '—');
+      if (product.key === 'codex') {
+        stateCell.textContent = 'Not updated';
+        stateCell.classList.add('is-unverified');
+        stateCell.appendChild(el('span', 'when', 'Unverified'));
+      } else {
+        stateCell.textContent = item ? 'No live source' : '—';
+      }
     } else {
       stateCell.classList.add(item.updated ? 'is-up' : 'is-down');
       stateCell.textContent = item.updated ? 'Updated' : 'Not updated';

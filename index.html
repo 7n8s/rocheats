@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#0b1111">
 <link rel="icon" href="assets/mark.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/mark.png">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
 <header class="titlebar">
@@ -27,11 +27,11 @@
     <ul class="stats" id="stats"><li><b>—</b><span>updated</span></li><li><b>—</b><span>stale</span></li><li><b>—</b><span>detected</span></li><li><b>—</b><span>behind Roblox</span></li></ul>
     <div class="rbx" id="rbx" hidden><i class="dot" id="rbxDot"></i><span class="caps">ROBLOX BUILD</span><b id="rbxVersion">—</b><span class="right" id="rbxCurrent">—</span></div>
   </section>
-  <div class="list-heading"><div><p class="eyebrow">THE TRACKER</p><h2>Products <span class="heading-dot">✳</span></h2></div><span class="count" id="count">9 of 9 products</span></div>
+  <div class="list-heading"><div><p class="eyebrow">THE TRACKER</p><h2>Products <span class="heading-dot" aria-hidden="true"></span></h2></div><span class="count" id="count">9 of 9 products</span></div>
   <div class="toolbar"><div class="chips" role="tablist" aria-label="Filter products"><button role="tab" aria-selected="true" class="chip is-on" data-filter="0">All products</button><button role="tab" aria-selected="false" class="chip" data-filter="1">Updated</button><button role="tab" aria-selected="false" class="chip" data-filter="2">Not updated</button></div><span class="toolbar-note">STATUS OVERVIEW <span>↗</span></span></div>
   <ul class="rows" id="rows" aria-live="polite"></ul>
   <div class="empty" id="empty" hidden><p><b id="emptyTitle">Can’t reach the feed</b></p><p id="emptyBody">Check your connection and try again.</p><div class="empty-actions"><button class="btn btn-accent" id="retryBtn">Retry</button><a class="link" href="?demo=1">Preview with sample data</a></div></div>
-  <footer class="foot"><span>Status from <a href="https://weao.xyz" target="_blank" rel="noopener">WEAO</a> · Roblox build from <a href="https://clientsettingscdn.roblox.com" target="_blank" rel="noopener">Roblox</a></span><span id="footNote">Checks only while this tab is open <span class="accent">✳</span></span></footer>
+  <footer class="foot"><span>Status from <a href="https://weao.xyz" target="_blank" rel="noopener">WEAO</a> · Roblox build from <a href="https://clientsettingscdn.roblox.com" target="_blank" rel="noopener">Roblox</a></span><span id="footNote">Checks only while this tab is open <span class="footer-dot" aria-hidden="true"></span></span></footer>
 </main>
 <div class="scrim" id="scrim" hidden></div>
 <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" hidden>
@@ -41,6 +41,6 @@
   <div class="settings-section"><div class="section-heading"><div><p class="eyebrow">03 / MONITORING</p><h3>Checks & alerts</h3><p>Control how often you hear from us.</p></div></div><p class="setting-label">CHECK EVERY</p><div class="seg row-seg" id="intervalSeg" role="group" aria-label="Check interval"></div><div class="switches"><label class="switch"><span><b>Notifications</b><small>Tell me when an executor or Roblox changes</small></span><input type="checkbox" id="notifToggle"><i></i></label><div class="alerts" id="alertList"><p class="setting-label">TELL ME ABOUT</p><label class="switch sub"><span><small>Status changes</small></span><input type="checkbox" data-alert="updates"><i></i></label><label class="switch sub"><span><small>New executor versions</small></span><input type="checkbox" data-alert="versions"><i></i></label><label class="switch sub"><span><small>Detection changes</small></span><input type="checkbox" data-alert="detection"><i></i></label><label class="switch sub"><span><small>Roblox client updates</small></span><input type="checkbox" data-alert="roblox"><i></i></label></div><button class="btn btn-ghost test-btn" id="testNotifBtn">Send a test notification</button></div></div>
 </aside>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

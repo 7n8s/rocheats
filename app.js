@@ -25,22 +25,22 @@
 
   // Two independent colours are rendered in both the preview and backdrop.
   const SCENES = [
-    { id: 'aurora', label: 'Aurora', a: 'rgba(72,192,185,.40)', b: 'rgba(60,113,180,.30)' },
-    { id: 'midnight', label: 'Midnight', a: 'rgba(55,85,180,.48)', b: 'rgba(99,70,168,.32)' },
-    { id: 'ember', label: 'Ember', a: 'rgba(215,105,62,.42)', b: 'rgba(159,51,53,.30)' },
-    { id: 'forest', label: 'Forest', a: 'rgba(51,153,104,.42)', b: 'rgba(95,130,75,.30)' },
-    { id: 'carbon', label: 'Carbon', a: 'rgba(132,151,142,.24)', b: 'rgba(61,77,75,.18)' },
-    { id: 'ocean', label: 'Ocean', a: 'rgba(29,148,189,.45)', b: 'rgba(42,95,175,.30)' },
-    { id: 'ice', label: 'Ice', a: 'rgba(155,214,229,.39)', b: 'rgba(94,144,186,.28)' },
-    { id: 'orchid', label: 'Orchid', a: 'rgba(169,89,194,.44)', b: 'rgba(99,74,178,.31)' },
-    { id: 'rose', label: 'Rose', a: 'rgba(218,100,137,.40)', b: 'rgba(146,65,97,.30)' },
-    { id: 'sunset', label: 'Sunset', a: 'rgba(234,136,65,.43)', b: 'rgba(190,65,107,.30)' },
-    { id: 'lagoon', label: 'Lagoon', a: 'rgba(51,183,171,.44)', b: 'rgba(43,111,129,.32)' },
-    { id: 'moss', label: 'Moss', a: 'rgba(145,165,70,.40)', b: 'rgba(51,127,95,.27)' },
-    { id: 'violet', label: 'Violet', a: 'rgba(117,95,206,.45)', b: 'rgba(99,59,153,.30)' },
-    { id: 'copper', label: 'Copper', a: 'rgba(176,104,60,.44)', b: 'rgba(112,78,51,.30)' },
-    { id: 'slate', label: 'Slate', a: 'rgba(100,148,153,.38)', b: 'rgba(69,89,123,.28)' },
-    { id: 'noir', label: 'Noir', a: 'rgba(74,88,81,.18)', b: 'rgba(30,42,40,.12)' },
+    { id: 'aurora', label: 'Aurora', a: '#245f64', b: '#202b60' },
+    { id: 'midnight', label: 'Midnight', a: '#202e67', b: '#241b50' },
+    { id: 'ember', label: 'Ember', a: '#803b27', b: '#451c29' },
+    { id: 'forest', label: 'Forest', a: '#246143', b: '#1b3834' },
+    { id: 'carbon', label: 'Carbon', a: '#414f4b', b: '#1b2527' },
+    { id: 'ocean', label: 'Ocean', a: '#1b627a', b: '#1d315f' },
+    { id: 'ice', label: 'Ice', a: '#47808c', b: '#2a4962' },
+    { id: 'orchid', label: 'Orchid', a: '#663e78', b: '#342455' },
+    { id: 'rose', label: 'Rose', a: '#833b5b', b: '#49283d' },
+    { id: 'sunset', label: 'Sunset', a: '#9b5029', b: '#652c4c' },
+    { id: 'lagoon', label: 'Lagoon', a: '#137c77', b: '#174b5a' },
+    { id: 'moss', label: 'Moss', a: '#596c32', b: '#234632' },
+    { id: 'violet', label: 'Violet', a: '#4d3d87', b: '#38295e' },
+    { id: 'copper', label: 'Copper', a: '#775039', b: '#422d2b' },
+    { id: 'slate', label: 'Slate', a: '#385d69', b: '#2a354f' },
+    { id: 'noir', label: 'Noir', a: '#303c37', b: '#151e1d' },
   ];
 
   const ACCENTS = ['#7deeff', '#5b9dff', '#8a6bff', '#6fe7c4', '#f5c46c', '#ff8fa3'];
@@ -65,7 +65,7 @@
     const fallback = {
       scene: 'aurora', accent: '#7deeff', theme: 'glass',
       interval: 5, notifications: false,
-      density: 'comfortable', strength: 100, reducedMotion: false,
+      density: 'comfortable', strength: 100, reducedMotion: false, sceneColor: '#258d91',
       alerts: { updates: true, versions: true, detection: true, roblox: true },
     };
     try {
@@ -426,8 +426,9 @@
     document.documentElement.style.setProperty('--accent', settings.accent);
     const scene = SCENES.find((s) => s.id === settings.scene) || SCENES[0];
     const root = document.documentElement.style;
-    root.setProperty('--scene-a', scene.a);
-    root.setProperty('--scene-b', scene.b);
+    const customColour = /^#[0-9a-f]{6}$/i.test(settings.sceneColor || '') ? settings.sceneColor : '#258d91';
+    root.setProperty('--scene-a', settings.scene === 'custom-color' ? `color-mix(in srgb, ${customColour} 45%, #0a1211)` : scene.a);
+    root.setProperty('--scene-b', settings.scene === 'custom-color' ? `color-mix(in srgb, ${customColour} 27%, #11141e)` : scene.b);
     root.setProperty('--strength', String(Math.max(20, Math.min(100, Number(settings.strength) || 100)) / 100));
     let image = '';
     try { image = localStorage.getItem('rcm.web.image') || ''; } catch (_) {}
@@ -448,7 +449,7 @@
     scenes.textContent = '';
     for (const s of SCENES) {
       const b = el('button', 'swatch');
-      b.style.background = `radial-gradient(ellipse at 15% 15%, ${s.a}, transparent 70%), radial-gradient(ellipse at 85% 85%, ${s.b}, transparent 70%), #101917`;
+      b.style.background = `linear-gradient(135deg, ${s.a}, ${s.b})`;
       b.appendChild(el('span', '', s.label));
       b.type = 'button';
       b.addEventListener('click', () => {
@@ -595,6 +596,7 @@
       b.classList.toggle('is-on', b.dataset.density === (settings.density || 'comfortable'));
       b.setAttribute('aria-pressed', String(b.dataset.density === (settings.density || 'comfortable')));
     }
+    $('#customSceneColor').value = /^#[0-9a-f]{6}$/i.test(settings.sceneColor || '') ? settings.sceneColor : '#258d91';
     $('#sceneStrength').value = settings.strength || 100;
     $('#sceneStrengthValue').textContent = (settings.strength || 100) + '%';
     $('#motionToggle').checked = !!settings.reducedMotion;
@@ -606,6 +608,10 @@
 
   $('#sceneStrength').addEventListener('input', (e) => {
     settings.strength = Number(e.target.value); saveSettings(); applySettings(); syncSettings();
+  });
+  $('#customSceneColor').addEventListener('input', (e) => {
+    settings.sceneColor = e.target.value; settings.scene = 'custom-color';
+    saveSettings(); applySettings(); syncSettings();
   });
   $('#customAccent').addEventListener('input', (e) => {
     settings.accent = e.target.value; saveSettings(); applySettings(); syncSettings();

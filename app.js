@@ -894,6 +894,26 @@
     toastTimer = setTimeout(() => t.classList.remove('is-open'), 3200);
   }
 
+  // Optional local background music. Browsers require a user gesture to play;
+  // the track is not downloaded until the listener asks for it.
+  const backgroundMusic = $('#backgroundMusic');
+  const musicControl = $('#musicControl');
+  backgroundMusic.volume = 0.18;
+  function syncMusicControl() {
+    const playing = !backgroundMusic.paused && !backgroundMusic.ended;
+    musicControl.setAttribute('aria-pressed', String(playing));
+    musicControl.setAttribute('aria-label', `${playing ? 'Pause' : 'Play'} background music: Whole Team Straight by ovine hall`);
+    $('#musicLabel').textContent = playing ? 'Music on' : 'Music off';
+  }
+  backgroundMusic.addEventListener('play', syncMusicControl);
+  backgroundMusic.addEventListener('pause', syncMusicControl);
+  musicControl.addEventListener('click', async () => {
+    if (!backgroundMusic.paused) { backgroundMusic.pause(); syncMusicControl(); return; }
+    if (!backgroundMusic.hasAttribute('src')) backgroundMusic.src = backgroundMusic.dataset.src;
+    try { await backgroundMusic.play(); syncMusicControl(); }
+    catch (_) { syncMusicControl(); toast('Could not play the music in this browser.'); }
+  });
+
   // ------------------------------------------------------------------- wiring
   $('#checkBtn').addEventListener('click', () => pollFeed());
   $('#retryBtn').addEventListener('click', () => pollFeed());

@@ -126,3 +126,14 @@ html.wheel-smoothing{scroll-behavior:auto!important;scroll-snap-type:none!import
 .hero .stats .metric-icon svg{width:16px;height:16px;fill:currentColor;stroke:none}
 .hero .stats .metric-icon svg .icon-cut{fill:none;stroke:#38413f;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 @media(max-width:360px){.hero .stats .metric-icon{width:25px;height:25px;border-radius:8px}.hero .stats .metric-icon svg{width:14px;height:14px}}
+
+/* Detection warning belongs on the status chip, not over the product logo. */
+.row .state{position:relative}
+.row .state .det-badge{left:auto;top:auto;right:-6px;bottom:-5px;z-index:2}
+.row .state .det-badge .tip{left:auto;right:0;min-width:160px;max-width:min(250px,calc(100vw - 50px));width:max-content;white-space:normal;text-align:left;line-height:1.4;font-weight:500;overflow-wrap:anywhere}
+
+/* Do not hide an already-revealed widget inside the section being viewed. */
+.is-active-section .reveal-pending.has-entered:not(:focus-within),.is-active-section .row.reveal-pending.has-entered:not(:focus-within){opacity:1;transform:none}
+
+.row .state .det-badge{border:0;padding:0;cursor:pointer}
+.row .state .det-badge.is-open .tip{opacity:1}

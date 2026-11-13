@@ -99,6 +99,11 @@
     const revealVisible = (entries, observer) => {
       for (const entry of entries) {
         const visible = entry.isIntersecting && entry.intersectionRatio >= observer.thresholds[0];
+        // Once a widget has appeared, keep it visible while its section is
+        // active. Also handle jumps directly into the top fade-out zone.
+        if (visible || (entry.boundingClientRect.bottom > 0 && entry.boundingClientRect.top < window.innerHeight * .28)) {
+          entry.target.classList.add('has-entered');
+        }
         // Exiting above moves up slightly; below enters from below.
         const above = !visible && entry.boundingClientRect.bottom <= (entry.rootBounds?.top ?? 0) + entry.boundingClientRect.height * observer.thresholds[0];
         entry.target.classList.toggle('is-above', above);
@@ -149,6 +154,18 @@
       observeReveal(card, `faq:${i}`, (i % 2) * 75, rowRevealObserver));
   }
 
+  // A widget can land in the observer's top margin after a scroll jump. It is
+  // still on screen and must not remain transparent in the active section.
+  function keepVisibleAtTop(section) {
+    if (!section) return;
+    const candidates = [...section.querySelectorAll('.reveal-pending:not(.has-entered)')];
+    const visibleAtTop = candidates.filter((node) => {
+      const rect = node.getBoundingClientRect();
+      return rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight * .28;
+    });
+    visibleAtTop.forEach((node) => node.classList.add('has-entered'));
+  }
+
   // Keep the section currently occupying the middle of the screen intact.
   // Items below the viewport still reveal individually as they come into view.
   function setupActiveSection() {
@@ -168,10 +185,11 @@
           return visible > best.visible ? { section, visible } : best;
         }, { section: null, visible: 0 }).section;
       }
-      if (next === active) return;
+      if (next === active) { keepVisibleAtTop(active); return; }
       if (active) active.classList.remove('is-active-section');
       active = next;
       if (active) active.classList.add('is-active-section');
+      keepVisibleAtTop(active);
     };
     const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
     window.addEventListener('scroll', schedule, { passive: true });
@@ -288,7 +306,10 @@
       const item = {
         live: true,
         updated: !!raw.updateStatus,
-        detected: !!raw.detected,
+        // Only a real boolean is authoritative: null, missing or strings
+        // must not turn into a false detection (or an undetected guarantee).
+        detected: typeof raw.detected === 'boolean' ? raw.detected : null,
+        detectionReason: typeof raw.detectionReason === 'string' ? raw.detectionReason.trim().slice(0, 240) : '',
         version: typeof raw.version === 'string' && raw.version.toLowerCase() !== 'unknown' ? raw.version : '',
         rbx: typeof raw.rbxversion === 'string' ? raw.rbxversion : '',
         at: parseWeaoDate(raw.updatedDate),
@@ -305,9 +326,10 @@
           notify(product.name + ' ' + item.version,
             'New version, previously ' + (prev.version || 'unknown') + '.');
         }
-        if (settings.alerts.detection && prev.detected !== item.detected) {
-          notify(product.name + (item.detected ? ' detected' : ' no longer detected'),
-            item.detected ? 'Hyperion is flagging it right now.' : 'The flag has cleared.');
+        if (settings.alerts.detection && typeof prev.detected === 'boolean' &&
+            typeof item.detected === 'boolean' && prev.detected !== item.detected) {
+          notify(product.name + (item.detected ? ' reported detected' : ' detection flag cleared'),
+            item.detected ? 'WEAO reports it as detected.' : 'WEAO no longer reports detection; this is not a safety guarantee.');
         }
       }
       state.items.set(key, item);
@@ -418,7 +440,7 @@
     const items = PRODUCTS.map((p) => ({ product: p, item: state.items.get(p.key) }));
     const live = items.filter((x) => x.item && x.item.live);
     const up = live.filter((x) => x.item.updated).length;
-    const det = live.filter((x) => x.item.detected).length;
+    const det = live.filter((x) => x.item.detected === true).length;
     const behind = live.filter((x) => x.item.rbx && state.roblox.upload && x.item.rbx !== state.roblox.upload).length;
 
     $('#headline').textContent = live.length ? `${up} of ${live.length} updated` : (state.checking ? 'Checking…' : 'No data yet');
@@ -472,9 +494,10 @@
 
     const sig = JSON.stringify([
       state.filter,
+      !!state.error,
       [...state.flash],
       shown.map((x) => (x.item
-        ? [x.item.live, x.item.updated, x.item.detected, x.item.version, x.item.at, x.item.rbx]
+        ? [x.item.live, x.item.updated, x.item.detected, x.item.detectionReason, x.item.version, x.item.at, x.item.rbx]
         : 0)),
     ]);
     if (sig !== lastRows) {
@@ -483,7 +506,7 @@
       // Carry the visual state across feed refreshes so a polling update does
       // not make an already-visible row flash or replay its entrance.
       const previous = new Map([...list.querySelectorAll('[data-reveal-key]')].map((n) =>
-        [n.dataset.revealKey, { visible: n.classList.contains('is-revealed'), above: n.classList.contains('is-above') }]));
+        [n.dataset.revealKey, { visible: n.classList.contains('is-revealed'), above: n.classList.contains('is-above'), entered: n.classList.contains('has-entered') }]));
       if (rowRevealObserver) list.querySelectorAll('[data-reveal-key]').forEach((n) => rowRevealObserver.unobserve(n));
       list.textContent = '';
       for (const [i, x] of shown.entries()) {
@@ -492,9 +515,11 @@
         const prior = previous.get(key);
         if (prior && prior.visible) item.classList.add('is-revealed');
         if (prior && prior.above) item.classList.add('is-above');
+        if (prior && prior.entered) item.classList.add('has-entered');
         list.appendChild(item);
         observeReveal(item, key, Math.min(i % 3, 2) * 45, rowRevealObserver);
       }
+      requestAnimationFrame(() => keepVisibleAtTop($('.is-active-section')));
     }
 
     $('#empty').hidden = !(state.error && !live.length);
@@ -527,7 +552,7 @@
     // tile
     const tile = el('div', 'tile');
     const img = el('img');
-    img.src = `assets/logo-${product.key}.jpg`;
+    img.src = product.key === 'matcha' ? 'assets/logo-matcha-new.png' : `assets/logo-${product.key}.jpg`;
     img.alt = '';
     img.loading = 'lazy';
     img.addEventListener('error', () => {
@@ -586,15 +611,24 @@
       if (item.at) stateCell.appendChild(el('span', 'when', ago(item.at)));
     }
 
-    // detection: a small exclamation mark on the tile's corner; hovering says "Detected"
-    if (item && item.live && item.detected) {
-      const badge = el('span', 'det-badge');
-      badge.setAttribute('role', 'img');
-      badge.setAttribute('aria-label', product.name + ' is detected');
-      badge.tabIndex = 0;
-      badge.appendChild(el('span', 'tip', 'Detected'));
+    // Detection is the feed's report, not an independent safety guarantee.
+    // Keep the warning at the lower-right corner of the status chip.
+    if (item && item.live && item.detected === true) {
+      const badge = el('button', 'det-badge');
+      badge.type = 'button';
+      const detail = `WEAO reports detected${item.detectionReason ? `: ${item.detectionReason}` : ''}${state.error ? ' (last successful check; feed offline)' : ''}`;
+      badge.setAttribute('aria-label', `${product.name}: ${detail}`);
+      badge.setAttribute('aria-expanded', 'false');
+      badge.addEventListener('click', () => {
+        const open = badge.classList.toggle('is-open');
+        badge.setAttribute('aria-expanded', String(open));
+      });
+      badge.addEventListener('blur', () => { badge.classList.remove('is-open'); badge.setAttribute('aria-expanded', 'false'); });
+      const tip = el('span', 'tip', detail);
+      tip.setAttribute('aria-hidden', 'true');
+      badge.appendChild(tip);
       li.classList.add('has-badge');
-      tile.appendChild(badge);
+      stateCell.appendChild(badge);
     }
 
     li.append(tile, mid, stateCell);

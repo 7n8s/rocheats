@@ -116,9 +116,72 @@
       ['.shop-all', 'shop-all', 0], ['.shop-disclaimer', 'shop-note', 0],
       ['.foot', 'footer', 0],
     ].forEach(([selector, key, delay]) => observeReveal($(selector), key, delay));
+    document.querySelectorAll('.stats li').forEach((stat, i) =>
+      observeReveal(stat, `stat:${i}`, 180 + i * 60));
+    document.querySelectorAll('.chip').forEach((chip, i) =>
+      observeReveal(chip, `filter:${i}`, 90 + i * 60));
+    observeReveal($('#rbx'), 'roblox-build', 160);
     document.querySelectorAll('.shop-card').forEach((card, i) =>
       observeReveal(card, `shop:${card.dataset.shop}`, i * 80));
   }
+
+  // Wheel smoothing is used only for fine-pointer desktop input. Touch,
+  // keyboard, zoom, modal scrolling and reduced-motion remain native.
+  let scrollFrame = 0, scrollTarget = 0, scrollPosition = 0, scrollTime = 0;
+  const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const finePointer = window.matchMedia('(pointer: fine)');
+  function stopSmoothScroll() {
+    if (scrollFrame) cancelAnimationFrame(scrollFrame);
+    scrollFrame = 0;
+    scrollTime = 0;
+    document.documentElement.classList.remove('wheel-smoothing');
+  }
+  function smoothScrollFrame(time) {
+    if (settings.reducedMotion || motionPreference.matches || !finePointer.matches) {
+      stopSmoothScroll(); return;
+    }
+    const limit = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    scrollTarget = Math.max(0, Math.min(limit, scrollTarget));
+    const elapsed = scrollTime ? Math.min(40, Math.max(1, time - scrollTime)) : 16;
+    scrollTime = time;
+    scrollPosition += (scrollTarget - scrollPosition) * (1 - Math.exp(-elapsed / 105));
+    if (Math.abs(scrollTarget - scrollPosition) < 0.5) {
+      window.scrollTo(0, scrollTarget);
+      stopSmoothScroll(); return;
+    }
+    window.scrollTo(0, scrollPosition);
+    scrollFrame = requestAnimationFrame(smoothScrollFrame);
+  }
+  function nestedCanScroll(node, delta) {
+    for (let n = node instanceof Element ? node : null; n && n !== document.body; n = n.parentElement) {
+      if (n.closest('.sheet')) return true;
+      const style = getComputedStyle(n);
+      if (/(auto|scroll)/.test(style.overflowY) && n.scrollHeight > n.clientHeight + 1 &&
+          ((delta < 0 && n.scrollTop > 0) || (delta > 0 && n.scrollTop + n.clientHeight < n.scrollHeight - 1))) return true;
+    }
+    return false;
+  }
+  window.addEventListener('wheel', (event) => {
+    if (!event.cancelable || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey ||
+        !finePointer.matches || motionPreference.matches || settings.reducedMotion ||
+        Math.abs(event.deltaX) > Math.abs(event.deltaY) || !event.deltaY ||
+        nestedCanScroll(event.target, event.deltaY)) return;
+    const limit = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    if (!limit) return;
+    const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1);
+    if (!scrollFrame) { scrollPosition = window.scrollY; scrollTarget = scrollPosition; }
+    const next = Math.max(0, Math.min(limit, scrollTarget + delta));
+    if (next === scrollTarget) return;
+    event.preventDefault();
+    scrollTarget = next;
+    if (!scrollFrame) {
+      document.documentElement.classList.add('wheel-smoothing');
+      scrollFrame = requestAnimationFrame(smoothScrollFrame);
+    }
+  }, { passive: false });
+  window.addEventListener('keydown', stopSmoothScroll, { passive: true });
+  window.addEventListener('touchstart', stopSmoothScroll, { passive: true });
+  window.addEventListener('pointerdown', stopSmoothScroll, { passive: true });
 
   // ------------------------------------------------------------------- time
   const ago = (ms) => {
@@ -667,7 +730,7 @@
     settings.accent = e.target.value; saveSettings(); applySettings(); syncSettings();
   });
   $('#motionToggle').addEventListener('change', (e) => {
-    settings.reducedMotion = e.target.checked; saveSettings(); applySettings();
+    settings.reducedMotion = e.target.checked; if (settings.reducedMotion) stopSmoothScroll(); saveSettings(); applySettings();
   });
   $('#resetAppearance').addEventListener('click', () => {
     Object.assign(settings, { scene: 'aurora', accent: '#7deeff', theme: 'glass',

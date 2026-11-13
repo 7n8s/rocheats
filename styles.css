@@ -50,3 +50,14 @@ main{max-width:1100px;margin:auto;padding:56px 32px 36px}.page-intro{display:fle
 @media(max-width:600px){.shop-section{margin-top:50px;padding-top:30px}.shop-index{display:none}.shop-heading h2{font-size:28px}.shop-heading p:not(.eyebrow){font-size:12px}.shop-grid{grid-template-columns:1fr;gap:10px}.shop-card{min-height:0;padding:16px;display:grid;grid-template-columns:52px minmax(0,1fr);column-gap:13px}.shop-card-top{grid-column:1/-1}.shop-logo{grid-column:1;grid-row:2;width:52px;height:52px;margin-top:17px;border-radius:13px}.shop-copy{grid-column:2;grid-row:2;align-self:center;margin-top:17px}.shop-copy h3{font-size:18px;margin:0 0 3px}.shop-copy p{font-size:11px}.shop-price,.shop-link{grid-column:1/-1}.shop-price{margin-top:18px;padding:14px 0 12px}.shop-link{min-height:42px}.shop-disclaimer{font-size:10px}.shop-jump{margin-top:16px}}
 
 .shop-all{display:inline-flex;align-items:center;gap:9px;margin-top:20px;color:var(--text);font-weight:700;font-size:12px;text-decoration:none;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.04)}.shop-all span{color:var(--accent);font-size:16px}.shop-all:hover{border-color:var(--accent);background:rgba(255,255,255,.09)}.shop-all:focus-visible,.shop-jump:focus-visible,.shop-link:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* The checker and shop are separate scrollable sections; no forced scroll snap. */
+@media (prefers-reduced-motion: no-preference){html:not([data-motion="reduced"]){scroll-behavior:smooth}}
+.checker-section{display:flow-root}
+.scroll-cue{width:max-content;max-width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;margin:37px auto 0;padding:8px 14px;color:var(--text2);font-size:9px;font-weight:750;letter-spacing:.18em;text-decoration:none;transition:color .2s}
+.scroll-cue svg{color:var(--accent);animation:scroll-nudge 1.7s ease-in-out infinite}
+.scroll-cue:hover{color:var(--text)}
+.scroll-cue:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
+@keyframes scroll-nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+.shop-section{min-height:calc(100svh - 60px);display:flex;flex-direction:column;justify-content:center;margin-top:34px;padding-top:40px;padding-bottom:40px}
+@media(max-width:600px){.scroll-cue{margin-top:26px}.shop-section{min-height:100svh;margin-top:24px;padding-top:36px;padding-bottom:36px}}

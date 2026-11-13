@@ -120,6 +120,7 @@
       ['.hero', 'overview', 140], ['.list-heading', 'list-heading', 190],
       ['.toolbar', 'filters', 240], ['.shop-heading', 'shop-heading', 0],
       ['.shop-all', 'shop-all', 0], ['.shop-disclaimer', 'shop-note', 0],
+      ['.faq-heading', 'faq-heading', 0], ['.faq-important', 'faq-important', 0],
       ['.foot', 'footer', 0],
     ].forEach(([selector, key, delay]) => observeReveal($(selector), key, delay));
     document.querySelectorAll('.stats li').forEach((stat, i) =>
@@ -129,6 +130,8 @@
     observeReveal($('#rbx'), 'roblox-build', 160);
     document.querySelectorAll('.shop-card').forEach((card, i) =>
       observeReveal(card, `shop:${card.dataset.shop}`, i * 80));
+    document.querySelectorAll('.faq-card').forEach((card, i) =>
+      observeReveal(card, `faq:${i}`, (i % 2) * 75, rowRevealObserver));
   }
 
   // Wheel smoothing is used only for fine-pointer desktop input. Touch,

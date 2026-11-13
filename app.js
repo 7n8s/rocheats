@@ -1,9 +1,5 @@
-/* RoCheats Monitor — web edition.
- *
- * Same nine products, same WEAO feed and the same Roblox build watch as the
- * desktop and Android builds, with no server behind it: the site is static and
- * both APIs send `access-control-allow-origin: *`, so the browser talks to them
- * directly.
+/* RoCheats Monitor — static website.
+ * Live WEAO status and Roblox build checks run in the browser.
  */
 (() => {
   'use strict';

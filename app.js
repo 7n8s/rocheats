@@ -304,6 +304,8 @@
     livePill.lastChild.textContent = state.demo ? 'DEMO' : (state.error ? 'OFFLINE' : (state.checkedAt ? 'LIVE' : 'CHECKING'));
     $('#checkBtn').classList.toggle('is-busy', state.checking);
 
+    renderShop();
+
     // rows
     const shown = items.filter((x) => {
       if (!x.item) return state.filter === 0 || (state.filter === 1 && x.product.key === 'codex');
@@ -338,6 +340,17 @@
       setTimeout(() => { state.flash.clear(); }, 1500);
     }
     if (state.newBuild) setTimeout(() => { state.newBuild = false; }, 3600);
+  }
+
+  function renderShop() {
+    for (const card of document.querySelectorAll('[data-shop]')) {
+      const item = state.items.get(card.dataset.shop);
+      const live = !!(item && item.live);
+      const status = card.querySelector('.shop-status');
+      status.textContent = live ? (item.updated ? 'Updated' : 'Not updated') : (state.checking ? 'Checking status' : 'No live data');
+      status.classList.toggle('is-up', live && item.updated);
+      status.classList.toggle('is-down', live && !item.updated);
+    }
   }
 
   function row(product, item) {

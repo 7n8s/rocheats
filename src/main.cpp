@@ -54,7 +54,7 @@
 // Constants
 // ---------------------------------------------------------------------------
 static const wchar_t* const APP_NAME    = L"RoCheats Monitor";
-static const wchar_t* const APP_VERSION = L"2.0";
+static const wchar_t* const APP_VERSION = L"2.2";
 static const wchar_t* const WND_CLASS   = L"RoCheatsMonitor.MainWindow";
 static const wchar_t* const MUTEX_NAME  = L"Local\\RoCheatsMonitor.SingleInstance";
 static const wchar_t* const RUN_KEY     = L"Software\\Microsoft\\Windows\\CurrentVersion\\Run";
@@ -98,7 +98,9 @@ enum {
     HIT_SCRIM,  // the dimmed dashboard beside the settings panel
     HIT_SHEET,  // empty part of the settings panel
     HIT_TGL0,   // + 0 notifications, + 1 sound, + 2 start with Windows
-    HIT_SEG0 = HIT_TGL0 + 3,           // + index into INTERVALS
+    HIT_DENS0,  // + 0 comfortable, + 1 compact
+    HIT_ALERT0, // + 0 status, + 1 versions, + 2 detection, + 3 Roblox
+    HIT_SEG0 = HIT_ALERT0 + 4,         // + index into INTERVALS
     HIT_FILTER0 = HIT_SEG0 + SEG_COUNT,  // + 0 all, 1 updated, 2 not updated
     HIT_SWATCH0 = HIT_FILTER0 + 3,     // + 0..5 scenes, 6 picture, 7 colour
     HIT_THEME0 = HIT_SWATCH0 + 8,      // + 0 glass, 1 flat
@@ -142,8 +144,14 @@ const uint32_t Black     = 0x000000;
 // Layout in logical pixels (100 % scale). S() converts to device pixels.
 static const double kW = 780, kTitleH = 52, kPad = 20;
 static const double kRailW = 56, kRailMin = 780;
-static const double kHeroH = 150, kToolbarH = 66, kRowH = 46, kGap = 8;
-static const double kPanelW = 278, kMinH = 660;
+static const double kHeroH = 150, kToolbarH = 66, kRowH = 50, kGap = 8;
+// Density only changes metrics, never content: compact simply spends less air.
+static bool Compact();  // defined after Settings
+static double DensHero() { return Compact() ? 124.0 : kHeroH; }
+static double DensRow() { return Compact() ? 36.0 : kRowH; }
+static double DensGap() { return Compact() ? 5.0 : kGap; }
+static double DensToolbar() { return Compact() ? 54.0 : kToolbarH; }
+static const double kPanelW = 278, kMinH = 740;
 static const int LOGO_TILE = 96, LOGO_COUNT = 10;
 static const int SWATCHES = 8;  // six scenes, a picture and a colour
 
@@ -172,6 +180,11 @@ struct Settings {
     int intervalMin = 5;
     bool notifications = true;
     bool sound = true;
+    std::wstring density = L"comfortable";  // comfortable or compact
+    bool alertUpdates = true;    // status flips
+    bool alertVersions = true;   // a new version string for the same status
+    bool alertDetection = true;  // Hyperion flags it or clears it
+    bool alertRoblox = true;     // a new Roblox client build
     bool trayHintShown = false;
     std::wstring apiUrl;  // optional override, tried before the built-in URLs
 };
@@ -201,7 +214,7 @@ struct FetchParams {
 
 struct Change {
     int index;  // product index
-    int kind;   // 0 = update status, 1 = detection
+    int kind;   // 0 = update status, 1 = detection, 2 = new version string
     bool now;   // new value
 };
 
@@ -262,6 +275,25 @@ static HICON g_iconSmall = nullptr, g_iconLarge = nullptr;
 static UINT g_msgTaskbarCreated = 0;
 static double g_scale = 1.0;
 static Settings g_set;
+
+static bool Compact() { return g_set.density == L"compact"; }
+static void SaveCustomisation();  // defined next to the ini helpers
+static bool AlertOn(int n) {
+    switch (n) {
+        case 0: return g_set.alertUpdates;
+        case 1: return g_set.alertVersions;
+        case 2: return g_set.alertDetection;
+        default: return g_set.alertRoblox;
+    }
+}
+static void AlertSet(int n, bool on) {
+    switch (n) {
+        case 0: g_set.alertUpdates = on; break;
+        case 1: g_set.alertVersions = on; break;
+        case 2: g_set.alertDetection = on; break;
+        default: g_set.alertRoblox = on; break;
+    }
+}
 static std::vector<Product> g_products;
 static std::wstring g_iniPath;
 
@@ -303,8 +335,13 @@ static int g_filter = 0;  // 0 all, 1 updated, 2 not updated
 
 static Anim g_hov[HIT_COUNT];        // hover highlight per element
 static Anim g_tgl[3];                // switch knobs
+static Anim g_alertTgl[4];           // the four notification switches
 static Anim g_seg;                   // highlight position in the interval picker
 static Anim g_sheet;                 // 0 = settings closed, 1 = open
+// The panel is taller than the window on short screens, so it scrolls: the
+// wheel moves `to`, and `y` chases it so the motion eases instead of jumping.
+static double g_scrollTo = 0.0, g_scrollY = 0.0;
+static const double kPanelContentH = 872.0;  // logical height of everything in the panel
 static float g_flash[MAX_PRODUCTS];   // 1 -> 0 after a product changed status
 static Anim g_rowPos[MAX_PRODUCTS];   // 0..1 while a row slides to its new slot
 static float g_rowFrom[MAX_PRODUCTS];  // where it slid from, in slot positions
@@ -317,6 +354,19 @@ static Anim g_splash;                 // 0 -> 1 while the wordmark sits over the
 static bool g_splashOn = false;        // the wordmark is still on screen
 static double g_splashElapsed = 0.0;   // seconds since the wordmark came up
 static bool g_animOn = false;
+// Repaint bookkeeping for the paint path: an animation tick only redraws what
+// it actually changed. The panel is hundreds of thousands of pixels, so asking
+// for the whole window on every tick is what made it cost a core.
+static void InvalidateFront(const RECT* r);
+static RECT g_tickDirty[24];
+static int g_tickDirtyCount = 0;
+static void TickDirty(const RECT& r) {
+    if (g_tickDirtyCount < 24) g_tickDirty[g_tickDirtyCount++] = r;
+    // Only the panel is large; everything else invalidates itself by control id.
+    if (r.right - r.left > 0) InvalidateFront(&r);
+}
+static void TickDirtyClear() { g_tickDirtyCount = 0; }
+static int g_bgW = 0, g_bgH = 0, g_bgGen = 0;
 static LARGE_INTEGER g_qpf, g_animLast;
 
 // ---------------------------------------------------------------------------
@@ -536,6 +586,14 @@ static void IniSetInt(const std::wstring& sec, const wchar_t* key, int value) {
 
 static std::wstring ProductSection(const Product& p) { return L"Product." + p.key; }
 
+static void SaveCustomisation() {
+    IniSet(L"Settings", L"Density", g_set.density);
+    IniSetInt(L"Settings", L"AlertUpdates", g_set.alertUpdates ? 1 : 0);
+    IniSetInt(L"Settings", L"AlertVersions", g_set.alertVersions ? 1 : 0);
+    IniSetInt(L"Settings", L"AlertDetection", g_set.alertDetection ? 1 : 0);
+    IniSetInt(L"Settings", L"AlertRoblox", g_set.alertRoblox ? 1 : 0);
+}
+
 static void SaveProduct(const Product& p) {
     const std::wstring sec = ProductSection(p);
     IniSetInt(sec, L"Notify", p.notify ? 1 : 0);
@@ -551,6 +609,11 @@ static void LoadSettings() {
     const std::wstring sec = L"Settings";
     g_set.intervalMin = Clamp(IniGetInt(sec, L"IntervalMinutes", 5), 1, 1440);
     g_set.notifications = IniGetInt(sec, L"Notifications", 1) != 0;
+    g_set.density = Trim(IniGet(sec, L"Density", L"comfortable"));
+    g_set.alertUpdates = IniGetInt(sec, L"AlertUpdates", 1) != 0;
+    g_set.alertVersions = IniGetInt(sec, L"AlertVersions", 1) != 0;
+    g_set.alertDetection = IniGetInt(sec, L"AlertDetection", 1) != 0;
+    g_set.alertRoblox = IniGetInt(sec, L"AlertRoblox", 1) != 0;
     g_set.sound = IniGetInt(sec, L"Sound", 1) != 0;
     g_set.trayHintShown = IniGetInt(sec, L"TrayHintShown", 0) != 0;
     g_set.background = Trim(IniGet(sec, L"Background", L"aurora"));
@@ -891,7 +954,7 @@ static double MainW() { return kW - MainX(); }
 
 // The window grows with the number of products; short lists get some breathing room.
 static double LogicalH() {
-    const double h = kTitleH + kHeroH + 18 + kToolbarH + ProductCount() * (kRowH + kGap) + kPad;
+    const double h = kTitleH + DensHero() + 18 + DensToolbar() + ProductCount() * (DensRow() + DensGap()) + kPad;
     return h < kMinH ? kMinH : h;
 }
 
@@ -900,7 +963,7 @@ static double LogicalH() {
 static bool g_panelInline = false;
 static int WinW() { return S(kW) + (g_panelInline ? S(kPanelW) : 0); }
 static int WinH() { return S(LogicalH()); }
-static double ListTop() { return kTitleH + kHeroH + 18 + kToolbarH; }
+static double ListTop() { return kTitleH + DensHero() + 18 + DensToolbar(); }
 
 static bool RowMatches(int i) {
     if (g_filter == 0) return true;
@@ -929,7 +992,7 @@ static RECT TitleButton(int n) { return SR(kW - 8 - 40 - n * 44, (kTitleH - 30) 
 static RECT RailRect() { return SR(0, 0, kRailW, LogicalH()); }
 static RECT NavRect(int i) { return SR(12, 60 + i * 44, 32, 32); }
 static RECT HeroRect() {
-    return RECT{ S(MainX() + kPad), S(kTitleH), S(MainX() + MainW() - kPad), S(kTitleH + kHeroH) };
+    return RECT{ S(MainX() + kPad), S(kTitleH), S(MainX() + MainW() - kPad), S(kTitleH + DensHero()) };
 }
 static RECT RbxStripRect() {
     const RECT h = HeroRect();
@@ -955,10 +1018,10 @@ static bool Clickable(int id);
 static bool RectOf(int id, RECT& r);
 
 
-static RECT FilterRect(int k) { return SR(MainX() + kPad + k * 92, kTitleH + kHeroH + 18, 84, 30); }
+static RECT FilterRect(int k) { return SR(MainX() + kPad + k * 92, kTitleH + DensHero() + 18, 84, 30); }
 static RECT RowRect(int i) {
-    const int y = S(ListTop() + RowShown(i) * (kRowH + kGap));
-    return RECT{ S(MainX() + kPad), y, S(MainX() + MainW() - kPad), y + S(kRowH) };
+    const int y = S(ListTop() + RowShown(i) * (DensRow() + DensGap()));
+    return RECT{ S(MainX() + kPad), y, S(MainX() + MainW() - kPad), y + S(DensRow()) };
 }
 // The detection badge sits on the artwork's top-left corner. Clicking it still
 // toggles this product's alerts, exactly as the old chip did.
@@ -968,29 +1031,55 @@ static RECT DetRect(int i) {
     return RECT{ cx - S(9), cy - S(9), cx + S(9), cy + S(9) };
 }
 static RECT BellRect(int i) { return DetRect(i); }
+static void PanelMotion(int& dx, int& dy);
 static double PanelLeft() { return (double)(WinW() - S(kPanelW)) / g_scale; }
 static RECT PanelRect() { return RECT{ S(PanelLeft()), 0, WinW(), S(LogicalH()) }; }
-static RECT PanelCloseRect() { return RECT{ WinW() - S(44), S(16), WinW() - S(16), S(44) }; }
-static RECT SegBox() { return RECT{ S(PanelLeft() + 20), S(78), S(PanelLeft() + 258), S(112) }; }
-static RECT SegRect(int k) {
-    const RECT b = SegBox();
-    const int w = (b.right - b.left - S(4)) / SEG_COUNT;
+static RECT PanelCloseRect() {
+    int dx = 0, dy = 0;
+    PanelMotion(dx, dy);
+    return RECT{ WinW() - S(44) - dx, S(16) + dy, WinW() - S(16) - dx, S(44) + dy };
+}
+// How far the panel can scroll: its content height, less the window it sits in.
+static double PanelMaxScroll() {
+    const double room = LogicalH() - 16.0;
+    return kPanelContentH > room ? kPanelContentH - room : 0.0;
+}
+static void ClampScroll() { g_scrollTo = std::max(0.0, std::min(g_scrollTo, PanelMaxScroll())); }
+static RECT PanelBodyClip() {
+    // the scrolled area: below the title, above the pinned footer
+    const int top = S(10) + S(38);
+    const int bottom = WinH() - S(10) - S(30);
+    return RECT{ S(PanelLeft()), top, WinW(), bottom };
+}
+// Panel X/Y helpers. Both take the sheet's motion into account, so every
+// control travels with the panel instead of sitting still behind it.
+static int PX(double logical) {
+    int dx = 0, dy = 0;
+    PanelMotion(dx, dy);
+    return (int)std::lround(S(PanelLeft() + logical)) - dx;
+}
+// Panel Y helper: logical row position -> client pixel, less the scroll offset.
+static int PY(double logical) { return (int)std::lround(S(logical) - g_scrollY); }
+static int PYL(double logical) { return S(logical) - (int)std::lround(g_scrollY); }
+
+static bool In(const RECT& r, POINT pt);
+static int HitTest(POINT pt);
+static bool Clickable(int id);
+static bool RectOf(int id, RECT& r);
+
+
+static RECT SegBox() { return RECT{ PX(20), PY(76), PX(258), PY(108) }; }
+static RECT DensBox() { return RECT{ PX(20), PY(138), PX(258), PY(172) }; }
+static double PanelRowY(int n) { return 188.0 + n * 46.0; }
+static RECT DensRect(int k) {
+    const RECT b = DensBox();
+    const int w = (b.right - b.left - S(4)) / 2;
     return RECT{ b.left + S(2) + w * k, b.top + S(2), b.left + S(2) + w * (k + 1), b.bottom - S(2) };
 }
-static double PanelRowY(int n) {
-    static const double ys[3] = { 146, 194, 302 };
-    return ys[n];
-}
-static RECT PanelRowRect(int n) {
-    return RECT{ S(PanelLeft() + 10), S(PanelRowY(n)), WinW() - S(10), S(PanelRowY(n) + 48) };
-}
-static RECT TestRect() { return RECT{ S(PanelLeft() + 20), S(234), WinW() - S(20), S(268) }; }
-static RECT SwatchRect(int k) {
-    const int size = 40, gap = 10;
-    const int x = S(PanelLeft() + 20) + (k % 4) * S(size + gap);
-    const int y = S(388) + (k / 4) * S(size + gap);
-    return RECT{ x, y, x + S(size), y + S(size) };
-}
+static const wchar_t* const kAlertTitle[4] = { L"Status changes", L"New versions",
+                                               L"Detection changes", L"Roblox updates" };
+static const wchar_t* const kAlertHelp[4] = { L"updated / not updated", L"a new version string",
+                                              L"flagged or cleared", L"a new client build" };
 static const int ACCENTS = 6;
 static uint32_t AccentAt(int k) {
     static const uint32_t list[ACCENTS] = { 0x7DEEFF, 0x5B9DFF, 0x8A6BFF, 0x6FE7C4, 0xF5C46C, 0xFF8FA3 };
@@ -1004,22 +1093,44 @@ static int AccentIndex() {
     }
     return 0;
 }
-static RECT PicButtonRect() {
-    return RECT{ S(PanelLeft() + 20), S(486), S(PanelLeft() + 20 + 238), S(486 + 34) };
+static RECT SegRect(int k) {
+    const RECT b = SegBox();
+    const int w = (b.right - b.left - S(4)) / SEG_COUNT;
+    return RECT{ b.left + S(2) + w * k, b.top + S(2), b.left + S(2) + w * (k + 1), b.bottom - S(2) };
 }
-static RECT AccentRect(int k) {
-    const int size = 24, gap = 10;
-    const int x = S(PanelLeft() + 20) + k * S(size + gap);
-    const int y = S(602);
+static RECT PanelRowRect(int n) {
+    return RECT{ PX(10), PY(PanelRowY(n)), PX(kPanelW - 10), PY(PanelRowY(n) + 48) };
+}
+// the four notification switches, indented under the master one
+static double AlertRowY(int n) { return 356.0 + n * 38.0; }
+static RECT AlertRowRect(int n) {
+    return RECT{ PX(18), PY(AlertRowY(n)), PX(kPanelW - 12), PY(AlertRowY(n) + 40) };
+}
+static RECT AlertSwitchRect(int n) {
+    const RECT r = AlertRowRect(n);
+    const int cy = (r.top + r.bottom) / 2;
+    return RECT{ r.right - S(16 + 34), cy - S(9), r.right - S(16), cy + S(9) };
+}
+static RECT TestRect() { return RECT{ PX(20), PY(526), PX(kPanelW - 20), PY(558) }; }
+static RECT SwatchRect(int k) {
+    const int size = 42, gap = 10;
+    const int x = PX(20) + (k % 4) * S(size + gap);
+    const int y = PY(600) + (k / 4) * S(size + gap);
     return RECT{ x, y, x + S(size), y + S(size) };
 }
+static RECT PicButtonRect() { return RECT{ PX(20), PY(710), PX(20 + 238), PY(710 + 36) }; }
+static RECT ThemeBoxRect() { return RECT{ PX(20), PY(762), PX(kPanelW - 20), PY(798) }; }
 static RECT ThemeSegRect(int k) {
-    const RECT b = { S(PanelLeft() + 20), S(548), WinW() - S(20), S(582) };
+    const RECT b = ThemeBoxRect();
     const int w = (b.right - b.left - S(4)) / 2;
     return RECT{ b.left + S(2) + w * k, b.top + S(2), b.left + S(2) + w * (k + 1), b.bottom - S(2) };
 }
-static RECT ThemeBoxRect() { return RECT{ S(PanelLeft() + 20), S(506), WinW() - S(20), S(540) }; }
-
+static RECT AccentRect(int k) {
+    const int size = 26, gap = 12;
+    const int x = PX(20) + k * S(size + gap);
+    const int y = PY(822);
+    return RECT{ x, y, x + S(size), y + S(size) };
+}
 static bool In(const RECT& r, POINT pt) { return PtInRect(&r, pt) != FALSE; }
 
 static int HitTest(POINT pt) {
@@ -1036,10 +1147,20 @@ static int HitTest(POINT pt) {
     if (g_sheetOpen) {
         if (!In(PanelRect(), pt)) return HIT_SCRIM;
         if (In(PanelCloseRect(), pt)) return HIT_SHEET_CLOSE;
+        // Rects below the header are already scrolled; anything that has slid
+        // under the pinned header or footer is not clickable where it cannot be seen.
+        const RECT body = PanelBodyClip();
+        if (!In(body, pt)) return HIT_SHEET;
         for (int k = 0; k < SEG_COUNT; ++k)
             if (In(SegRect(k), pt)) return HIT_SEG0 + k;
         for (int n = 0; n < 3; ++n)
             if (In(PanelRowRect(n), pt)) return HIT_TGL0 + n;
+        }
+        for (int a = 0; a < 4; ++a) {
+            if (In(AlertRowRect(a), pt)) return HIT_ALERT0 + a;
+        }
+        for (int d = 0; d < 2; ++d) {
+            if (In(DensRect(d), pt)) return HIT_DENS0 + d;
         if (In(TestRect(), pt)) return HIT_TEST;
         for (int k = 0; k < SWATCHES; ++k)
             if (In(SwatchRect(k), pt)) return HIT_SWATCH0 + k;
@@ -1081,6 +1202,8 @@ static bool RectOf(int id, RECT& r) {
     case HIT_TEST: r = TestRect(); return true;
     }
     if (id >= HIT_TGL0 && id < HIT_TGL0 + 3) { r = PanelRowRect(id - HIT_TGL0); return true; }
+    if (id >= HIT_ALERT0 && id < HIT_ALERT0 + 4) { r = AlertRowRect(id - HIT_ALERT0); return true; }
+    if (id >= HIT_DENS0 && id < HIT_DENS0 + 2) { r = DensRect(id - HIT_DENS0); return true; }
     if (id >= HIT_SEG0 && id < HIT_SEG0 + SEG_COUNT) { r = SegBox(); return true; }
     if (id >= HIT_FILTER0 && id < HIT_FILTER0 + 3) { r = FilterRect(id - HIT_FILTER0); return true; }
     if (id >= HIT_SWATCH0 && id < HIT_SWATCH0 + SWATCHES) { r = SwatchRect(id - HIT_SWATCH0); return true; }
@@ -1188,6 +1311,14 @@ static void OnAnimTick() {
     }
 
     const bool on[3] = { g_set.notifications, g_set.sound, g_autostart };
+    for (int a = 0; a < 4; ++a) {
+        g_alertTgl[a].to = AlertOn(a) ? 1.0f : 0.0f;
+        if (g_alertTgl[a].step(dt, 16.0f)) {
+            const RECT r = AlertRowRect(a);
+            InvalidateFront(&r);
+            busy = true;
+        }
+    }
     for (int k = 0; k < 3; ++k) {
         g_tgl[k].to = on[k] ? 1.0f : 0.0f;
         if (g_tgl[k].step(dt, 16.0f)) {
@@ -1206,8 +1337,16 @@ static void OnAnimTick() {
     }
 
     g_sheet.to = g_sheetOpen ? 1.0f : 0.0f;
-    if (g_sheet.step(dt, 15.0f)) {
-        InvalidateFront(nullptr);
+    if (g_sheet.step(dt, 11.0f)) {  // a touch slower than the rest: this is a big surface
+        TickDirty(PanelRect());
+        busy = true;
+    }
+    ClampScroll();
+    if (std::fabs(g_scrollTo - g_scrollY) > 0.05) {
+        // Eased chase, so a flick of the wheel settles instead of stopping dead.
+        g_scrollY += (g_scrollTo - g_scrollY) * std::min(1.0, (double)dt * 16.0);
+        if (std::fabs(g_scrollTo - g_scrollY) <= 0.05) g_scrollY = g_scrollTo;
+        TickDirty(PanelRect());
         busy = true;
     }
 
@@ -1270,6 +1409,7 @@ static void OnAnimTick() {
         busy = true;
     }
 
+    TickDirtyClear();
     if (!busy) {
         KillTimer(g_hwnd, TIMER_ANIM);
         g_animOn = false;
@@ -1817,7 +1957,7 @@ static void PaintScene(cv::Surface& s, int w, int h, const std::wstring& id) {
     cv::Glow(s, (float)w * 0.70f, (float)h * 0.52f, U(340), cv::Hex(sc->a, sc->ka * 0.70f));
     cv::Glow(s, (float)w * 0.16f, (float)h * 0.60f, U(300), cv::Hex(sc->b, sc->kb * 0.60f));
     cv::Glow(s, (float)w * 0.45f, (float)h * 0.86f, U(300), cv::Hex(sc->c, sc->kc * 0.55f));
-    const float cx = U(kW - kPad - 80), cy = U(kTitleH + kHeroH / 2);
+    const float cx = U(kW - kPad - 80), cy = U(kTitleH + DensHero() / 2);
     for (int k = 1; k <= 3; ++k)
         cv::StrokeArc(s, cx, cy, U(70.0 + k * 32.0), (float)Max(1, S(1)), 0.0f, 6.28318531f,
                       cv::Hex(pal::White, 0.02f));
@@ -1862,6 +2002,9 @@ static void BuildBackground(int w, int h) {
     g_bgPrev = g_bg;  // kept for the cross-fade
     if (g_bgPrev.size() != (size_t)w * (size_t)h) g_bgPrev.clear();
     g_bg.assign((size_t)w * (size_t)h, 0);
+    g_bgW = w;
+    g_bgH = h;
+    ++g_bgGen;
     cv::Surface s;
     s.attach(g_bg.data(), w, h);
     if (g_set.background == L"image") {
@@ -2683,11 +2826,11 @@ static std::vector<RowView> BuildRows(HDC dc) {
         v.r = RowRect(i);
         if (g_rowFrom[i] >= 0.0f) {  // sliding from where the row used to sit
             const float t = Ease(g_rowPos[i].v);
-            const float from = S(ListTop() + (double)g_rowFrom[i] * (kRowH + kGap));
+            const float from = S(ListTop() + (double)g_rowFrom[i] * (DensRow() + DensGap()));
             const float to = (float)v.r.top;
             v.shift = (from - to) * (1.0f - t);
             v.r.top = to + (int)std::lround(v.shift);
-            v.r.bottom = v.r.top + S(kRowH);
+            v.r.bottom = v.r.top + S(DensRow());
         }
         v.hov = g_hov[HIT_ROW0 + i].v;
         v.live = HasStatus(p);
@@ -2706,7 +2849,12 @@ static std::vector<RowView> BuildRows(HDC dc) {
             v.status = g_lastFailed ? L"No data" : L"Checking\u2026";
         }
         v.nameW = TextW(dc, Font(14, true), p.name);
-        v.art = RECT{ v.r.left + S(9), v.r.top + S(5), v.r.left + S(45), v.r.top + S(41) };
+        {
+            const int pad = Compact() ? 4 : 5;
+            const int side = (int)S(DensRow()) - pad * 2;
+            v.art = RECT{ v.r.left + S(9), v.r.top + S(pad), v.r.left + S(9) + side,
+                           v.r.top + S(pad) + side };
+        }
         v.detLeft = v.r.right - S(64);
         v.statusRight = v.r.right - S(18);
         out.push_back(v);
@@ -2714,16 +2862,120 @@ static std::vector<RowView> BuildRows(HDC dc) {
     return out;
 }
 
+// A row's face is identical every frame unless it is hovered, flashing, or the
+// scale/theme changed. Building that face means a backdrop blur over the whole
+// card, which is the single most expensive thing the app does; so it is built
+// once and blitted until one of those inputs actually changes.
+struct RowFaceKey {
+    int left = -1, top = -1, w = -1, h = -1;
+    int hovered = 0, flashing = 0, scaleQ = 0, style = 0, gen = 0;
+    bool operator==(const RowFaceKey& o) const {
+        return left == o.left && top == o.top && w == o.w && h == o.h && hovered == o.hovered &&
+               flashing == o.flashing && scaleQ == o.scaleQ && style == o.style && gen == o.gen;
+    }
+};
+struct RowFace {
+    RowFaceKey key;
+    int w = 0, h = 0;
+    std::vector<uint32_t> px;  // RGBA straight, blitted into the surface
+};
+static std::vector<RowFace> g_rowFace;  // grown on demand: a closed panel costs nothing
+static int g_rowFaceScale = 0, g_rowFaceStyle = 0;
+
+static void BlitFace(cv::Surface& s, const RowFace& f, int left, int top) {
+    for (int y = std::max(s.cy0, top); y < std::min(s.cy1, top + f.h); ++y) {
+        const uint32_t* src = f.px.data() + (size_t)(y - top) * f.w;
+        uint32_t* dst = s.row(y);
+        for (int x = std::max(s.cx0, left); x < std::min(s.cx1, left + f.w); ++x) {
+            const uint32_t v = src[x - left];
+            const int a = (int)(v >> 24);
+            if (a == 0) continue;
+            if (a == 255) {
+                dst[x] = v;
+            } else {
+                const uint32_t d = dst[x];
+                const int ia = 255 - a;
+                const int r = (int)((v >> 16) & 0xFF) * a / 255 + (int)((d >> 16) & 0xFF) * ia / 255;
+                const int g = (int)((v >> 8) & 0xFF) * a / 255 + (int)((d >> 8) & 0xFF) * ia / 255;
+                const int b = (int)(v & 0xFF) * a / 255 + (int)(d & 0xFF) * ia / 255;
+                dst[x] = 0xFF000000u | ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
+            }
+        }
+    }
+}
+
+// Draws just the face (card + artwork + badges) of a row into `s`, whose origin
+// is the row's top-left corner.
+static void DrawRowFaceBody(cv::Surface& s, const RowView& v, const RECT& r);
+
 static void DrawRowShapes(cv::Surface& s, const RowView& v) {
-    const RECT& r = v.r;
+    const RECT r = v.r;
     if (!s.touches((float)r.left - U(16), (float)r.top - U(16), FW(r) + U(32), FH(r) + U(32))) return;
-    const Product& p = g_products[(size_t)v.index];
     const float rad = U(14), hov = v.hov;
     const cv::Color status = cv::Hex(v.statusColor);
 
     if (g_flash[(size_t)v.index] > 0.0f)
         cv::Shadow(s, (float)r.left, (float)r.top, FW(r), FH(r), rad, U(16),
                    cv::Fade(status, 0.40f * g_flash[(size_t)v.index]));
+
+    // The face is cached; a hover, a flash or a scale change rebuilds it.
+    const int scaleQ = (int)std::lround(g_scale * 100.0);
+    const int styleQ = (int)std::lround((g_style.blur + g_style.topLight + g_style.edge) * 100.0f);
+    if (g_rowFaceScale != scaleQ || g_rowFaceStyle != styleQ) {
+        g_rowFaceScale = scaleQ;
+        g_rowFaceStyle = styleQ;
+        for (RowFace& f : g_rowFace) f.key.left = -1;  // everything is stale
+    }
+    if (g_rowFace.size() < g_products.size()) g_rowFace.resize(g_products.size());
+    RowFace& face = g_rowFace[(size_t)v.index];
+    RowFaceKey want;
+    want.left = 0;  // the face is built in local space, so position does not matter
+    want.top = 0;
+    want.w = FW(r);
+    want.h = FH(r);
+    want.hovered = hov > 0.002f ? 1 : 0;
+    want.flashing = g_flash[(size_t)v.index] > 0.0f ? 1 : 0;
+    want.scaleQ = scaleQ;
+    want.style = styleQ;
+    want.gen = g_bgGen;
+    if (!(face.key == want)) {
+        if (face.w != want.w || face.h != want.h) {
+            face.w = want.w;
+            face.h = want.h;
+            face.px.assign((size_t)face.w * (size_t)face.h, 0u);
+        } else {
+            std::fill(face.px.begin(), face.px.end(), 0u);
+        }
+        cv::Surface scratch;
+        scratch.attach(face.px.data(), face.w, face.h);
+        // Seed the scratch with the backdrop the glass will sample, otherwise the
+        // frosted card has nothing to bend and comes out flat.
+        for (int y = 0; y < face.h; ++y) {
+            const int sy = r.top + y;
+            if (sy < 0 || sy >= (int)g_bgH || face.w <= 0) break;
+            const int sx = std::max(0, (int)r.left);
+            const size_t rowOff = (size_t)sy * (size_t)g_bgW + (size_t)sx;
+            if (rowOff + (size_t)face.w > g_bg.size() || sx + face.w > g_bgW) break;
+            memcpy(face.px.data() + (size_t)y * (size_t)face.w, g_bg.data() + rowOff,
+                   (size_t)face.w * sizeof(uint32_t));
+        }
+        // The face is drawn in local space, so artwork and badges move with it.
+        RowView local = v;
+        local.r = RECT{ 0, 0, face.w, face.h };
+        local.art = RECT{ v.art.left - r.left, v.art.top - r.top, v.art.right - r.left, v.art.bottom - r.top };
+        DrawRowFaceBody(scratch, local, local.r);
+        for (uint32_t& px : face.px) px |= 0xFF000000u;  // finished composite
+        face.key = want;
+    }
+    BlitFace(s, face, r.left, r.top);
+    return;
+}
+
+static void DrawRowFaceBody(cv::Surface& s, const RowView& v, const RECT& r) {
+    const Product& p = g_products[(size_t)v.index];
+    const float rad = U(14), hov = v.hov;
+    const cv::Color status = cv::Hex(v.statusColor);
+
     if (g_style.blur > 0.0f) {
         GlassStyle st = g_style;
         st.topLight *= 0.55f + 0.45f * hov;
@@ -2741,8 +2993,7 @@ static void DrawRowShapes(cv::Surface& s, const RowView& v) {
                             cv::Fade(status, 0.7f * g_flash[(size_t)v.index]));
 
     // Artwork
-    const RECT art = v.art.right > v.art.left ? v.art
-                                              : RECT{ r.left + S(9), r.top + S(5), r.left + S(45), r.top + S(41) };
+    const RECT art = v.art;
     const Logo* logo = LogoFor(p);
     if (logo) {
         DrawLogo(s, art, *logo, 1.0f, true);
@@ -2819,19 +3070,69 @@ static RECT SwitchRect(int n) {
     return RECT{ r.right - S(16 + 36), r.top + S(14), r.right - S(16), r.top + S(34) };
 }
 
-static void DrawPanelShapes(cv::Surface& s) {
+// The sheet itself, in screen space: it lifts, slides in from the right and
+// settles with a small overshoot, so opening Settings reads as one gesture.
+static RECT rc_all(const cv::Surface& s) { return RECT{ 0, 0, s.w, s.h }; }
+// A packed colour mixed towards another, for text that has to fade with the panel.
+static uint32_t MixPacked(uint32_t fg, uint32_t bg, float amount) {
+    const cv::Color c = cv::Mix(cv::Hex(bg), cv::Hex(fg), cv::Clamp01(amount));
+    return ((uint32_t)(c.r + 0.5f) << 16) | ((uint32_t)(c.g + 0.5f) << 8) | (uint32_t)(c.b + 0.5f);
+}
+// Where the sheet sits this frame: it comes in from the right, eases down a
+// few pixels and overshoots by a hair, which is what gives it the spring.
+static void PanelMotion(int& dx, int& dy) {
+    const float t = Ease(g_sheet.v);
+    const float over = std::sin(g_sheet.v * 3.14159265f);
+    dx = (int)std::lround(S(34) * (1.0f - t) - S(2) * over);
+    dy = (int)std::lround(S(8) * (1.0f - t));
+}
+static RECT SheetRect() {
     const RECT p = PanelRect();
+    int dx = 0, dy = 0;
+    PanelMotion(dx, dy);
+    return RECT{ p.left + S(10) - dx, S(10) + dy, p.right - S(10) - dx, p.bottom - S(10) + dy };
+}
+static float SheetAlpha() { return cv::Clamp01(Ease(g_sheet.v) * 1.35f); }
+
+static void DrawPanelShapes(cv::Surface& s) {
+    // While the sheet is still coming in, clear the column first: the backdrop
+    // and the dashboard are both showing through it. Once it is fully open the
+    // glass styles paint their own face and this is skipped.
+    if (g_sheet.v < 0.995f) {
+        const int keepFull[4] = { s.cx0, s.cy0, s.cx1, s.cy1 };
+        const RECT sheetNow = SheetRect();
+        RECT cl;
+        const RECT full = rc_all(s);
+        if (IntersectRect(&cl, &full, &sheetNow)) {
+            s.setClip(cl.left, cl.top, cl.right, cl.bottom);
+            cv::FillRect(s, cl.left, cl.top, cl.right - cl.left, cl.bottom - cl.top, cv::Hex(pal::Panel));
+        }
+        s.setClip(keepFull[0], keepFull[1], keepFull[2], keepFull[3]);
+    }
     if (g_style.blur > 0.0f) {
-        RECT sheet = { p.left + S(10), S(10), p.right - S(10), p.bottom - S(10) };
+        RECT sheet = SheetRect();
         cv::Shadow(s, (float)sheet.left, (float)sheet.top + U(6), FW(sheet), FH(sheet), U(22), U(26),
                    cv::Hex(pal::Black, 0.45f));
         GlassStyle st = g_style;
         st.topLight *= 1.2f;
         GlassPanel(s, sheet, U(22), pal::Panel, st, true);
     } else {
-        cv::FillRect(s, p.left, p.top, p.right - p.left, p.bottom - p.top, cv::Hex(pal::Panel));
-        cv::FillRect(s, p.left, p.top, Max(1, S(1)), p.bottom - p.top, cv::Hex(pal::Line));
+        const RECT sheet = SheetRect();
+        cv::Shadow(s, (float)sheet.left, (float)sheet.top + U(6), FW(sheet), FH(sheet), U(18), U(22),
+                   cv::Hex(pal::Black, 0.42f * SheetAlpha()));
+        cv::FillRoundRect(s, (float)sheet.left, (float)sheet.top, FW(sheet), FH(sheet), U(18),
+                          cv::Hex(pal::Panel, SheetAlpha()));
+        cv::FillRect(s, sheet.left, sheet.top, Max(1, S(1)), sheet.bottom - sheet.top,
+                     cv::Hex(pal::Line, SheetAlpha()));
     }
+
+    // Everything below the title scrolls inside the sheet; the header and footer
+    // stay put, so the panel never feels like it is sliding under itself.
+    const RECT body = PanelBodyClip();
+    const int keepBody[4] = { s.cx0, s.cy0, s.cx1, s.cy1 };
+    RECT bc;
+    const RECT all = rc_all(s);
+    if (IntersectRect(&bc, &all, &body)) s.setClip(bc.left, bc.top, bc.right, bc.bottom);
 
     {  // close button
         const RECT r = PanelCloseRect();
@@ -2884,6 +3185,30 @@ static void DrawPanelShapes(cv::Surface& s) {
         const float hov = g_hov[HIT_TGL0 + n].v;
         if (hov > 0.0f) RoundBox(s, PanelRowRect(n), U(10), cv::Hex(pal::White, 0.04f * hov));
         DrawSwitch(s, SwitchRect(n), g_tgl[n].v, (n == 1 && !g_set.notifications) ? 0.4f : 1.0f);
+    }
+    {  // density picker
+        const RECT box = DensBox();
+        RoundBox(s, box, U(10), cv::Hex(pal::White, 0.045f));
+        RoundOutline(s, box, U(10), Hairline(), cv::Hex(pal::Line));
+        const int cur = Compact() ? 1 : 0;
+        cv::FillRoundRect(s, (float)DensRect(cur).left, (float)DensRect(cur).top,
+                          FW(DensRect(cur)), FH(DensRect(cur)), U(8), cv::Hex(pal::Accent));
+        for (int k = 0; k < 2; ++k) {
+            const float hov = g_hov[HIT_DENS0 + k].v;
+            if (k != cur && hov > 0.0f)
+                RoundBox(s, DensRect(k), U(8), cv::Hex(pal::White, 0.07f * hov));
+        }
+    }
+    for (int a = 0; a < 4; ++a) {  // per-event notification switches
+        const float hov = g_hov[HIT_ALERT0 + a].v;
+        if (hov > 0.0f) RoundBox(s, AlertRowRect(a), U(8), cv::Hex(pal::White, 0.035f * hov));
+        const float alpha = g_set.notifications ? 1.0f : 0.42f;
+        DrawSwitch(s, AlertSwitchRect(a), g_alertTgl[a].v, alpha);
+        if (a < 3) {  // a short hairline between them keeps the group readable
+            const RECT rr = AlertRowRect(a);
+            cv::FillRect(s, rr.left + S(30), rr.bottom - Max(1, S(1)),
+                         rr.right - rr.left - S(96), Max(1, S(1)), cv::Hex(pal::White, 0.05f));
+        }
     }
     {  // background swatches
         static const uint32_t swatch[SWATCHES] = { 0x5B9DFF, 0x8A6BFF, 0xFF7A5C, 0x6FCF97,
@@ -2939,53 +3264,83 @@ static void DrawPanelShapes(cv::Surface& s) {
         RoundBox(s, r, U(10), cv::Hex(pal::White, 0.05f + 0.05f * hov + (g_pressed == HIT_TEST ? 0.04f : 0.0f)));
         RoundOutline(s, r, U(10), Hairline(), cv::Mix(cv::Hex(pal::Line), cv::Hex(pal::LineHot), hov));
     }
+    s.setClip(keepBody[0], keepBody[1], keepBody[2], keepBody[3]);
 }
 
 static void DrawPanelText(HDC dc) {
     const RECT p = PanelRect();
     if (!RectVisible(dc, &p)) return;
-    const int x = p.left + S(20);
-    Text(dc, Font(16, true), Ref(pal::Text), RECT{ x, S(14), p.right - S(54), S(42) }, L"Settings");
+    int dx = 0, dy = 0;
+    PanelMotion(dx, dy);
+    const int x = p.left + S(20) - dx;
+    // Fade the whole column with the sheet: GDI text cannot blend, so it is a
+    // colour mix against the panel face.
+    const float a = SheetAlpha();
+    const uint32_t cText = MixPacked(pal::Text, pal::Panel, a);
+        const uint32_t cText3 = MixPacked(pal::Text3, pal::Panel, a);
+    const uint32_t cText4 = MixPacked(pal::Text4, pal::Panel, a);
 
-    TextSpaced(dc, Font(9.5, true), Ref(pal::Text3), x, S(64), L"CHECK EVERY", S(1.5));
-    TextSpaced(dc, Font(9.5, true), Ref(pal::Text3), x, S(133), L"NOTIFICATIONS", S(1.5));
-    TextSpaced(dc, Font(9.5, true), Ref(pal::Text3), x, S(291), L"SYSTEM", S(1.5));
+    // Pinned header, outside the scroll area.
+    Text(dc, Font(16, true), Ref(cText), RECT{ x, S(14) + dy, p.right - S(54) - dx, S(42) + dy }, L"Settings");
+    // Scrolled body: every Y below is measured from the scrolled position, so a
+    // single offset moves the entire column.
+    const RECT body = PanelBodyClip();
+    HRGN rgn = CreateRectRgn(body.left, body.top + dy, body.right - dx, body.bottom);
+    SelectClipRgn(dc, rgn);
+    DeleteObject(rgn);
+
+    TextSpaced(dc, Font(9.5, true), Ref(cText3), x, PYL(58), L"CHECK EVERY", S(1.5));
+    TextSpaced(dc, Font(9.5, true), Ref(cText3), x, PYL(124), L"DENSITY", S(1.5));
+    Text(dc, Font(12, true), RefMix(!Compact() ? pal::Bg : pal::Text3, pal::Panel, a), DensRect(0), L"Comfortable", DT_CENTER);
+    Text(dc, Font(12, true), RefMix(Compact() ? pal::Bg : pal::Text3, pal::Panel, a), DensRect(1), L"Compact", DT_CENTER);
+    TextSpaced(dc, Font(9.5, true), Ref(cText3), x, PYL(336), L"TELL ME ABOUT", S(1.5));
 
     const int cur = IntervalIndex();
     for (int k = 0; k < SEG_COUNT; ++k) {
         const float under = cur >= 0 ? cv::Clamp01(1.0f - std::fabs(g_seg.v - (float)k)) : 0.0f;
-        Text(dc, Font(12, true), RefMix(pal::Bg, pal::Text2, under), SegRect(k), IntervalShort(INTERVALS[k]),
-             DT_CENTER);
+        Text(dc, Font(12, true), RefMix(pal::Bg, pal::Text2, under), SegRect(k), IntervalShort(INTERVALS[k]), DT_CENTER);
     }
     for (int n = 0; n < 3; ++n) {
         const bool dim = n == 1 && !g_set.notifications;
-        const int y = S(PanelRowY(n));
-        Text(dc, Font(13, false), Ref(dim ? pal::Text3 : pal::Text), RECT{ x, y + S(6), p.right - S(70), y + S(26) },
+        const int y = PY(PanelRowY(n));
+        Text(dc, Font(13, false), Ref(dim ? cText3 : cText), RECT{ x, y + S(9), p.right - S(70) - dx, y + S(30) },
              kRowTitle[n]);
-        Text(dc, Font(11.5, false), Ref(dim ? pal::Text4 : pal::Text3),
-             RECT{ x, y + S(25), p.right - S(64), y + S(43) }, kRowHelp[n], DT_LEFT | DT_END_ELLIPSIS);
+        Text(dc, Font(11.5, false), Ref(dim ? cText4 : cText3),
+             RECT{ x, y + S(29), p.right - S(64) - dx, y + S(47) }, kRowHelp[n], DT_LEFT | DT_END_ELLIPSIS);
     }
-    Text(dc, Font(12.5, true), Ref(pal::Text), TestRect(), L"Send test notification", DT_CENTER);
+    for (int a2 = 0; a2 < 4; ++a2) {
+        const int y = PY(AlertRowY(a2));
+        const bool dim = !g_set.notifications;
+        Text(dc, Font(12, false), Ref(dim ? cText3 : cText),
+             RECT{ x + S(8), y + S(7), p.right - S(62) - dx, y + S(23) }, kAlertTitle[a2]);
+        Text(dc, Font(10.5, false), Ref(dim ? cText4 : cText3),
+             RECT{ x + S(8), y + S(23), p.right - S(56) - dx, y + S(37) }, kAlertHelp[a2], DT_LEFT | DT_END_ELLIPSIS);
+    }
+    Text(dc, Font(12.5, true), Ref(cText), TestRect(), L"Send test notification", DT_CENTER);
 
-    TextSpaced(dc, Font(9.5, true), Ref(pal::Text3), x, S(367), L"BACKGROUND", S(1.5));
-    TextSpaced(dc, Font(9.5, true), Ref(pal::Text3), x, S(592), L"ACCENT", S(1.5));
+    TextSpaced(dc, Font(9.5, true), Ref(cText3), x, PYL(578), L"BACKGROUND", S(1.5));
+    TextSpaced(dc, Font(9.5, true), Ref(cText3), x, PYL(804), L"ACCENT", S(1.5));
     {
         const RECT r = PicButtonRect();
-        Text(dc, Font(11.5, false), Ref(g_set.background == L"image" ? pal::Text : pal::Text2),
+        Text(dc, Font(11.5, false), RefMix(g_set.background == L"image" ? pal::Text : pal::Text2, pal::Panel, a),
              RECT{ r.left + S(34), r.top, r.right - S(12), r.bottom },
              g_set.background == L"image" ? Clip(FileNameOf(g_set.imagePath), 28) : L"Choose a picture\u2026",
              DT_LEFT | DT_END_ELLIPSIS);
     }
-    // The selected segment sits on solid accent, so its label is dark ink.
-    Text(dc, Font(12, true), Ref(g_set.theme != L"flat" ? pal::Bg : pal::Text3), ThemeSegRect(0), L"Liquid glass",
-         DT_CENTER);
-    Text(dc, Font(12, true), Ref(g_set.theme == L"flat" ? pal::Bg : pal::Text3), ThemeSegRect(1), L"Flat",
-         DT_CENTER);
+    Text(dc, Font(12, true), RefMix(g_set.theme != L"flat" ? pal::Bg : pal::Text3, pal::Panel, a), ThemeSegRect(0),
+         L"Liquid glass", DT_CENTER);
+    Text(dc, Font(12, true), RefMix(g_set.theme == L"flat" ? pal::Bg : pal::Text3, pal::Panel, a), ThemeSegRect(1),
+         L"Flat", DT_CENTER);
 
-    TextWrapped(dc, Font(11.5, false), Ref(pal::Text3), RECT{ x, p.bottom - S(96), p.right - S(20), p.bottom - S(46) },
-                L"\u201CUpdated\u201D means a tool supports the current Roblox build. It is not a safety rating.");
-    Text(dc, Font(11, false), Ref(pal::Text4), RECT{ x, p.bottom - S(36), p.right - S(20), p.bottom - S(18) },
+    SelectClipRgn(dc, nullptr);
+
+    // Pinned footer: version, and the honesty note when there is room for it.
+    Text(dc, Font(11, false), Ref(cText4), RECT{ x, p.bottom - S(36), p.right - S(20) - dx, p.bottom - S(18) },
          std::wstring(APP_NAME) + L" " + APP_VERSION + L"");
+    if (g_scrollTo <= 0.5)  // only pinned at rest, so it never rides over the swatches
+        TextWrapped(dc, Font(11.5, false), Ref(cText3),
+                    RECT{ x, p.bottom - S(92), p.right - S(20) - dx, p.bottom - S(44) },
+                    L"\u201CUpdated\u201D means a tool supports the current Roblox build. It is not a safety rating.");
 }
 
 // ---------------------------------------------------------------------------
@@ -3311,7 +3666,10 @@ static void NotifyChanges(const std::vector<Change>& changes) {
         const Product& p = g_products[prods[0]];
         if (changes.size() == 1) {
             const Change& c = changes[0];
-            if (c.kind == 0) {
+            if (c.kind == 2) {
+                title = p.name + L" " + p.version;
+                body = L"New version.";
+            } else if (c.kind == 0) {
                 title = p.name + (c.now ? L" is updated" : L" is no longer updated");
                 body = c.now ? std::wstring(TXT_DOWN) + L" \u2192 " + TXT_UP
                              : std::wstring(TXT_UP) + L" \u2192 " + TXT_DOWN;
@@ -3392,6 +3750,8 @@ static void ApplyResult(const FetchResult& r) {
             }
         }
         if (p.version != it->version) {
+            // a new version string while the status stayed put is its own event
+            if (!p.version.empty() && !it->version.empty()) changes.push_back({ (int)i, 2, true });
             p.version = it->version;
             dirty = true;
         }
@@ -3440,8 +3800,14 @@ static void ApplyResult(const FetchResult& r) {
 
     if (!g_set.notifications) return;
     std::vector<Change> wanted;
-    for (const Change& c : changes)
-        if (g_products[c.index].notify) wanted.push_back(c);
+    for (const Change& c : changes) {
+        if (!g_products[c.index].notify) continue;
+        // one switch per event, so "new versions" can be off while statuses stay on
+        const bool allowed = c.kind == 2 ? g_set.alertVersions
+                            : c.kind == 1 ? g_set.alertDetection
+                                          : g_set.alertUpdates;
+        if (allowed) wanted.push_back(c);
+    }
     NotifyChanges(wanted);
 }
 
@@ -3522,7 +3888,7 @@ static void OnRobloxFetched(RbxResult* r) {
         IniSet(L"Settings", L"RobloxUpload", g_rbxUpload);
         if (changed) {
             g_rbxPulse = 1.0f;
-            if (g_set.notifications) {
+            if (g_set.notifications && g_set.alertRoblox) {
                 ShowNotification(L"Roblox updated",
                                  (g_rbxVersion.empty() ? std::wstring(L"A new client build is out.")
                                                        : L"Now on " + g_rbxVersion) +
@@ -3629,6 +3995,7 @@ static void SetSheet(bool open) {
     if (g_sheetOpen == open) return;
     SnapshotRows();  // the list may have to slide aside for the panel
     g_sheetOpen = open;
+    g_scrollTo = g_scrollY = 0.0;  // always opens at the top
     // A column of its own when the screen allows it, an overlay when it does not.
     const int wider = (int)std::lround(kPanelW * g_scale);
     const bool old = g_panelInline;
@@ -3747,8 +4114,11 @@ static void Activate(int hit) {
         HideToTray();
     } else if (hit == HIT_CHECK) {
         ManualCheck();
-    } else if (hit == HIT_SHEET_CLOSE || hit == HIT_SCRIM) {
-        SetSheet(false);
+    } else if (hit == HIT_SHEET_CLOSE) {
+        SetSheet(false);  // the only way out is the cross or Esc; a stray click stays put
+    } else if (hit == HIT_SCRIM) {
+        // deliberately nothing: clicking the dashboard behind the panel used to
+        // dismiss it by accident, which lost whatever you were in the middle of.
     } else if (hit == HIT_TEST) {
         SendTestNotification();
     } else if (hit >= HIT_FILTER0 && hit < HIT_FILTER0 + 3) {
@@ -3770,6 +4140,17 @@ static void Activate(int hit) {
     } else if (hit == HIT_TGL0 + 2) {
         const bool want = !g_autostart;
         if (SetAutostart(want)) g_autostart = want;
+    } else if (hit >= HIT_DENS0 && hit < HIT_DENS0 + 2) {
+        g_set.density = (hit == HIT_DENS0 + 1) ? L"compact" : L"comfortable";
+        SaveCustomisation();
+        g_layoutNext = true;  // rows changed height, so re-measure
+        InvalidateAll();
+        StartAnim();
+    } else if (hit >= HIT_ALERT0 && hit < HIT_ALERT0 + 4) {
+        const int a = hit - HIT_ALERT0;
+        AlertSet(a, !AlertOn(a));
+        SaveCustomisation();
+        InvalidateFront(nullptr);
     } else if (hit >= HIT_SWATCH0 && hit < HIT_SWATCH0 + SWATCHES) {
         const int k = hit - HIT_SWATCH0;
         const std::wstring bg = k < 7 ? SceneId(k) : L"colour";
@@ -3933,6 +4314,16 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             ScreenToClient(hwnd, &pt);
             SetCursor(LoadCursorW(nullptr, Clickable(HitTest(pt)) ? IDC_HAND : IDC_ARROW));
             return TRUE;
+        }
+        break;
+
+    case WM_MOUSEWHEEL:
+        if (g_sheetOpen) {
+            const int delta = GET_WHEEL_DELTA_WPARAM(wParam);
+            g_scrollTo -= (double)delta / (double)WHEEL_DELTA * 64.0;
+            ClampScroll();
+            StartAnim();
+            return 0;
         }
         break;
 
@@ -4123,6 +4514,7 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE, PWSTR cmdLine, int) {
     g_splashOn = true;  // the wordmark plays once, over a dashboard that is already built
     g_splash.jump(0.0f);
     g_splashElapsed = 0.0;
+    for (int a = 0; a < 4; ++a) g_alertTgl[a].set(AlertOn(a) ? 1.0f : 0.0f);
     g_tgl[0].set(g_set.notifications ? 1.0f : 0.0f);
     g_tgl[1].set(g_set.sound ? 1.0f : 0.0f);
     g_tgl[2].set(g_autostart ? 1.0f : 0.0f);

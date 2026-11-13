@@ -109,18 +109,33 @@
         entry.target.classList.toggle('is-revealed', visible);
       }
     };
-    revealObserver = new IntersectionObserver(revealVisible,
-      { threshold: 0.06, rootMargin: '-8% 0px -5% 0px' });
-    // Reveal individual rows/cards within the viewport; fade them out near
-    // the top and back in again when scrolling up.
-    rowRevealObserver = new IntersectionObserver(revealVisible,
-      { threshold: 0.18, rootMargin: '-10% 0px -9% 0px' });
+    // Use viewport-height pixels: percentage root margins resolve against
+    // width, which would hide content too early on wide desktop screens.
+    const createViewportObservers = () => {
+      if (revealObserver) revealObserver.disconnect();
+      if (rowRevealObserver) rowRevealObserver.disconnect();
+      const h = window.innerHeight;
+      revealObserver = new IntersectionObserver(revealVisible,
+        { threshold: 0.06, rootMargin: `-${Math.round(h * .20)}px 0px -${Math.round(h * .05)}px 0px` });
+      rowRevealObserver = new IntersectionObserver(revealVisible,
+        { threshold: 0.18, rootMargin: `-${Math.round(h * .28)}px 0px -${Math.round(h * .09)}px 0px` });
+    };
+    createViewportObservers();
     // The header starts at the very top and must remain visible on page load.
     headerRevealObserver = new IntersectionObserver(revealVisible,
       { threshold: 0.06, rootMargin: '0px' });
+    window.addEventListener('resize', () => {
+      createViewportObservers();
+      document.querySelectorAll('[data-reveal-key]').forEach((node) => {
+        const key = node.dataset.revealKey;
+        if (key === 'header' || key === 'intro') return;
+        (key.startsWith('row:') || key.startsWith('faq:') ? rowRevealObserver : revealObserver).observe(node);
+      });
+    }, { passive: true });
     observeReveal($('.titlebar'), 'header', 0, headerRevealObserver);
+    // The introductory title must also be fully visible at the top of the page.
+    observeReveal($('.page-intro'), 'intro', 70, headerRevealObserver);
     [
-      ['.page-intro', 'intro', 70],
       ['.hero', 'overview', 140], ['.list-heading', 'list-heading', 190],
       ['.toolbar', 'filters', 240], ['.shop-heading', 'shop-heading', 0],
       ['.shop-all', 'shop-all', 0], ['.shop-disclaimer', 'shop-note', 0],

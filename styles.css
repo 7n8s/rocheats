@@ -82,3 +82,11 @@ html.wheel-smoothing{scroll-behavior:auto!important;scroll-snap-type:none!import
 .row.reveal-pending.is-above:not(:focus-within){transform:translateY(-24px);transition-delay:0ms}
 [data-motion="reduced"] .reveal-pending.is-above:not(:focus-within),[data-motion="reduced"] .row.reveal-pending.is-above:not(:focus-within){opacity:1;transform:none;transition:none}
 @media(prefers-reduced-motion:reduce){.reveal-pending.is-above:not(:focus-within),.row.reveal-pending.is-above:not(:focus-within){opacity:1;transform:none;transition:none}}
+
+/* Earlier, quicker exits keep the scroll fade visible before content leaves. */
+.reveal-pending.is-above:not(:focus-within){transform:translateY(-22px);transition:opacity .28s ease-out,transform .28s ease-out,border-color .18s,background .18s}
+.row.reveal-pending.is-above:not(:focus-within){transform:translateY(-30px);transition:opacity .28s ease-out,transform .28s ease-out,border-color .18s,background .18s}
+.faq-title-line{display:flex;align-items:center;gap:14px}.faq-logo{display:block;flex:none;width:44px;height:44px;object-fit:cover;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+@media(max-width:600px){.faq-title-line{gap:11px}.faq-logo{width:38px;height:38px;border-radius:10px}}
+[data-motion="reduced"] .reveal-pending.is-above:not(:focus-within),[data-motion="reduced"] .row.reveal-pending.is-above:not(:focus-within){opacity:1;transform:none;transition:none}
+@media(prefers-reduced-motion:reduce){.reveal-pending.is-above:not(:focus-within),.row.reveal-pending.is-above:not(:focus-within){opacity:1;transform:none;transition:none}}

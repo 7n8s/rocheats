@@ -63,3 +63,9 @@ html.wheel-smoothing{scroll-behavior:auto!important;scroll-snap-type:none!import
 .reveal-pending.is-revealed,.reveal-pending:focus-within{opacity:1;transform:translateY(0)}
 [data-motion="reduced"] .reveal-pending{opacity:1;transform:none;transition:none}
 @media(prefers-reduced-motion:reduce){.reveal-pending{opacity:1;transform:none;transition:none}}
+
+/* Each status row has a slightly longer, individual scroll entrance. */
+.row.reveal-pending{transform:translateY(24px);transition:opacity .85s cubic-bezier(.22,1,.36,1) var(--reveal-delay,0ms),transform .85s cubic-bezier(.22,1,.36,1) var(--reveal-delay,0ms),border-color .18s,background .18s}
+.row.reveal-pending.is-revealed,.row.reveal-pending:focus-within{transform:translateY(0)}
+[data-motion="reduced"] .row.reveal-pending{opacity:1;transform:none;transition:none}
+@media(prefers-reduced-motion:reduce){.row.reveal-pending{opacity:1;transform:none;transition:none}}

@@ -91,24 +91,30 @@
   // Each section enters once when it comes into view. Content stays visible if
   // IntersectionObserver is unavailable; polling never replays an entrance.
   const revealedKeys = new Set();
-  let revealObserver = null;
-  function observeReveal(node, key, delay = 0) {
-    if (!node || !revealObserver || revealedKeys.has(key)) return;
+  let revealObserver = null, rowRevealObserver = null;
+  function observeReveal(node, key, delay = 0, observer = revealObserver) {
+    if (!node || !observer || revealedKeys.has(key)) return;
     node.dataset.revealKey = key;
     node.style.setProperty('--reveal-delay', `${delay}ms`);
     node.classList.add('reveal-pending');
-    revealObserver.observe(node);
+    observer.observe(node);
   }
   function setupReveals() {
     if (!('IntersectionObserver' in window)) return;
-    revealObserver = new IntersectionObserver((entries) => {
+    const revealVisible = (entries, observer) => {
       for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
+        if (!entry.isIntersecting || entry.intersectionRatio < observer.thresholds[0]) continue;
         revealedKeys.add(entry.target.dataset.revealKey);
         entry.target.classList.add('is-revealed');
-        revealObserver.unobserve(entry.target);
+        observer.unobserve(entry.target);
       }
-    }, { threshold: 0.06, rootMargin: '0px 0px -5% 0px' });
+    };
+    revealObserver = new IntersectionObserver(revealVisible,
+      { threshold: 0.06, rootMargin: '0px 0px -5% 0px' });
+    // Product rows begin their own entrance once they are meaningfully inside
+    // the viewport, instead of animating just outside its bottom edge.
+    rowRevealObserver = new IntersectionObserver(revealVisible,
+      { threshold: 0.18, rootMargin: '0px 0px -9% 0px' });
     [
       ['.titlebar', 'header', 0], ['.page-intro', 'intro', 70],
       ['.hero', 'overview', 140], ['.list-heading', 'list-heading', 190],
@@ -421,12 +427,12 @@
     if (sig !== lastRows) {
       lastRows = sig;
       const list = $('#rows');
-      if (revealObserver) list.querySelectorAll('[data-reveal-key]').forEach((n) => revealObserver.unobserve(n));
+      if (rowRevealObserver) list.querySelectorAll('[data-reveal-key]').forEach((n) => rowRevealObserver.unobserve(n));
       list.textContent = '';
       for (const [i, x] of shown.entries()) {
         const item = row(x.product, x.item);
         list.appendChild(item);
-        observeReveal(item, `row:${x.product.key}`, Math.min(i, 4) * 55);
+        observeReveal(item, `row:${x.product.key}`, Math.min(i % 3, 2) * 45, rowRevealObserver);
       }
     }
 

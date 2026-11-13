@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#0b1111">
 <link rel="icon" href="assets/mark.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/mark.png">
-<link rel="stylesheet" href="styles.css?v=24">
+<link rel="stylesheet" href="styles.css?v=25">
 </head>
 <body>
 <header class="titlebar">
@@ -29,7 +29,12 @@
     </div>
     <div class="hero-breakdown">
       <div class="breakdown-head"><span>STATUS BREAKDOWN</span><span id="heroReported">— REPORTED</span></div>
-      <ul class="stats" id="stats"><li><span class="stat-label"><i class="metric-dot metric-up"></i>Updated</span><b>—</b></li><li><span class="stat-label"><i class="metric-dot metric-stale"></i>Stale</span><b>—</b></li><li><span class="stat-label"><i class="metric-dot metric-detected"></i>Detected</span><b>—</b></li><li><span class="stat-label"><i class="metric-dot metric-behind"></i>Behind Roblox</span><b>—</b></li></ul>
+      <ul class="stats" id="stats">
+        <li><span class="stat-label"><span class="metric-icon metric-up" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4.2 4.2L19 6.5"/></svg></span>Updated</span><b>—</b></li>
+        <li><span class="stat-label"><span class="metric-icon metric-stale" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3.3 2"/></svg></span>Stale</span><b>—</b></li>
+        <li><span class="stat-label"><span class="metric-icon metric-detected" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 4.8 6v5.3c0 4.1 2.6 7.5 7.2 9.7 4.6-2.2 7.2-5.6 7.2-9.7V6L12 3Z"/><path d="M12 8v4.4M12 16h.01"/></svg></span>Detected</span><b>—</b></li>
+        <li><span class="stat-label"><span class="metric-icon metric-behind" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v12m-4-4 4 4 4-4M5 20h14"/></svg></span>Behind Roblox</span><b>—</b></li>
+      </ul>
     </div>
     <div class="rbx" id="rbx" hidden><span class="rbx-indicator"><i class="dot" id="rbxDot"></i><span class="caps">ROBLOX BUILD</span></span><b id="rbxVersion">—</b><span class="right" id="rbxCurrent">—</span></div>
   </section>

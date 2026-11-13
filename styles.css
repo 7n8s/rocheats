@@ -110,3 +110,13 @@ html.wheel-smoothing{scroll-behavior:auto!important;scroll-snap-type:none!import
 [data-theme="flat"] .hero{background:none}[data-theme="flat"] .hero-primary,[data-theme="flat"] .hero-breakdown,[data-theme="flat"] .hero .rbx{background:var(--surface);box-shadow:none}
 @media(max-width:700px){.hero{grid-template-columns:1fr;gap:9px}.hero-primary{min-height:0;padding:20px 18px}.hero-primary-main{padding:22px 0}.hero h2{font-size:clamp(26px,7vw,33px)}.hero-breakdown{padding:18px 18px 8px}.breakdown-head{padding-bottom:12px}.hero .stats{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:20px}.hero .stats li{min-height:40px}.hero .stats li:nth-last-child(-n+2){border-bottom:0}.hero .rbx{grid-column:auto;padding:13px 18px;flex-wrap:wrap}.hero .rbx .right{margin-left:auto;flex-basis:auto;padding:0}}
 @media(max-width:360px){.hero-primary{padding:18px 14px}.hero-kicker{font-size:8px}.hero-feed{font-size:8px;padding:6px 7px}.hero-breakdown{padding:16px 14px 8px}.hero .stats{column-gap:12px}.hero .stats .stat-label{font-size:10px;gap:7px}.hero .rbx{padding:12px 14px}.hero .rbx .right{flex-basis:100%;text-align:left;margin-left:15px}}
+
+/* A clearer, icon-led status key; figures and the rest of the overview stay unchanged. */
+.hero .stats .stat-label{gap:10px;color:var(--text2)}
+.metric-icon{width:25px;height:25px;display:inline-grid;place-items:center;flex:none;border:1px solid currentColor;border-radius:8px}
+.metric-icon svg{width:14px;height:14px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.metric-icon.metric-up{color:var(--green);background:rgba(123,226,170,.09);border-color:rgba(123,226,170,.18)}
+.metric-icon.metric-stale{color:#ff9898;background:rgba(255,140,140,.08);border-color:rgba(255,140,140,.18)}
+.metric-icon.metric-detected{color:var(--amber);background:rgba(243,198,124,.08);border-color:rgba(243,198,124,.18)}
+.metric-icon.metric-behind{color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent);border-color:color-mix(in srgb,var(--accent) 18%,transparent)}
+@media(max-width:360px){.hero .stats .stat-label{gap:7px}.metric-icon{width:22px;height:22px;border-radius:7px}.metric-icon svg{width:13px;height:13px}}

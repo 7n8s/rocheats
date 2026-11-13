@@ -306,9 +306,9 @@
 
     // rows
     const shown = items.filter((x) => {
-      if (!x.item) return state.filter === 0 || (state.filter === 2 && x.product.key === 'codex');
-      if (state.filter === 1) return x.item.live && x.item.updated;
-      if (state.filter === 2) return (x.item.live && !x.item.updated) || (x.product.key === 'codex' && !x.item.live);
+      if (!x.item) return state.filter === 0 || (state.filter === 1 && x.product.key === 'codex');
+      if (state.filter === 1) return (x.item.live && x.item.updated) || (x.product.key === 'codex' && !x.item.live);
+      if (state.filter === 2) return x.item.live && !x.item.updated;
       return true;
     });
 
@@ -394,7 +394,7 @@
     if (!item || !item.live) {
       stateCell.classList.add('is-none');
       if (product.key === 'codex') {
-        stateCell.textContent = 'Not updated';
+        stateCell.textContent = 'Updated';
         stateCell.classList.add('is-unverified');
         stateCell.appendChild(el('span', 'when', 'Unverified'));
       } else {

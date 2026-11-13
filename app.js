@@ -153,6 +153,36 @@
       observeReveal(card, `faq:${i}`, (i % 2) * 75, rowRevealObserver));
   }
 
+  // Keep the section currently occupying the middle of the screen intact.
+  // Items below the viewport still reveal individually as they come into view.
+  function setupActiveSection() {
+    const sections = [...document.querySelectorAll('.checker-section, .shop-section, .faq-section')];
+    let active = null, frame = 0;
+    const update = () => {
+      frame = 0;
+      const middle = innerHeight / 2;
+      let next = sections.find((section) => {
+        const r = section.getBoundingClientRect();
+        return r.top <= middle && r.bottom > middle;
+      });
+      if (!next) {
+        next = sections.reduce((best, section) => {
+          const r = section.getBoundingClientRect();
+          const visible = Math.max(0, Math.min(innerHeight, r.bottom) - Math.max(0, r.top));
+          return visible > best.visible ? { section, visible } : best;
+        }, { section: null, visible: 0 }).section;
+      }
+      if (next === active) return;
+      if (active) active.classList.remove('is-active-section');
+      active = next;
+      if (active) active.classList.add('is-active-section');
+    };
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule, { passive: true });
+    update();
+  }
+
   // Wheel smoothing is used only for fine-pointer desktop input. Touch,
   // keyboard, zoom, modal scrolling and reduced-motion remain native.
   let scrollFrame = 0, scrollTarget = 0, scrollPosition = 0, scrollTime = 0;
@@ -864,6 +894,57 @@
     toastTimer = setTimeout(() => t.classList.remove('is-open'), 3200);
   }
 
+  // Official YouTube player; loaded only when the listener opens it. The
+  // platform handles playback rights and the listener starts playback.
+  let musicPlayer = null, musicApiPromise = null, musicOpen = false, musicRequest = 0;
+  function loadMusicApi() {
+    if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
+    if (musicApiPromise) return musicApiPromise;
+    musicApiPromise = new Promise((resolve, reject) => {
+      const previous = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        if (typeof previous === 'function') previous();
+        resolve(window.YT);
+      };
+      const script = document.createElement('script');
+      script.src = 'https://www.youtube.com/iframe_api';
+      script.onerror = () => { musicApiPromise = null; reject(new Error('Could not load YouTube')); };
+      document.head.appendChild(script);
+    });
+    return musicApiPromise;
+  }
+  function musicMessage(message) { $('#musicStatus').textContent = message; }
+  $('#musicToggle').addEventListener('click', async () => {
+    musicOpen = !musicOpen;
+    const request = ++musicRequest;
+    $('#musicToggle').setAttribute('aria-expanded', String(musicOpen));
+    $('#musicPanel').hidden = !musicOpen;
+    if (!musicOpen) {
+      if (musicPlayer) { musicPlayer.destroy(); musicPlayer = null; }
+      $('#musicFrame').innerHTML = '<div id="youtubePlayer"></div>';
+      return;
+    }
+    musicMessage('Loading YouTube player…');
+    try {
+      const YT = await loadMusicApi();
+      if (!musicOpen || request !== musicRequest) return;
+      musicPlayer = new YT.Player('youtubePlayer', {
+        videoId: 'y_cTBDxQMvA',
+        width: '100%', height: '200',
+        playerVars: { playsinline: 1, rel: 0, origin: location.origin },
+        events: {
+          onReady: (event) => {
+            event.target.setVolume(20);
+            const frame = event.target.getIframe();
+            if (frame) frame.title = 'Night, Blooming Jasmine by fakemink — YouTube player';
+            musicMessage('Press play in the YouTube player.');
+          },
+          onError: () => musicMessage('Player unavailable. Open the track on YouTube instead.')
+        }
+      });
+    } catch (_) { if (request === musicRequest && musicOpen) musicMessage('Player unavailable. Open the track on YouTube instead.'); }
+  });
+
   // ------------------------------------------------------------------- wiring
   $('#checkBtn').addEventListener('click', () => pollFeed());
   $('#retryBtn').addEventListener('click', () => pollFeed());
@@ -883,6 +964,7 @@
   applySettings();
   buildSettings();
   setupReveals();
+  setupActiveSection();
   render();
   pollRoblox();
   pollFeed();

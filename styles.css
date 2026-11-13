@@ -57,16 +57,9 @@ main{max-width:1100px;margin:auto;padding:56px 32px 36px}.page-intro{display:fle
 .shop-section{min-height:calc(100svh - 60px);display:flex;flex-direction:column;justify-content:center;margin-top:50px;padding-top:40px;padding-bottom:40px;scroll-snap-align:start;scroll-snap-stop:normal}
 @media(max-width:600px){.shop-section{min-height:100svh;margin-top:36px;padding-top:36px;padding-bottom:36px}}
 @media (pointer:fine) and (prefers-reduced-motion:no-preference){html:not([data-motion="reduced"]){scroll-snap-type:y proximity}}
-@supports (animation-timeline:view()){
-  @media (prefers-reduced-motion:no-preference){
-    html:not([data-motion="reduced"]) .shop-heading,
-    html:not([data-motion="reduced"]) .shop-grid,
-    html:not([data-motion="reduced"]) .shop-all,
-    html:not([data-motion="reduced"]) .shop-disclaimer{
-      animation:shop-arrive linear both;
-      animation-timeline:view();
-      animation-range:entry 0% entry 55%;
-    }
-  }
-}
-@keyframes shop-arrive{from{opacity:0;translate:0 32px}to{opacity:1;translate:0}}
+/* Subtle one-time fade and lift, staggered per widget. Applied by JS only;
+   browsers without IntersectionObserver keep everything visible. */
+.reveal-pending{opacity:0;transform:translateY(16px);transition:opacity .68s cubic-bezier(.22,1,.36,1) var(--reveal-delay,0ms),transform .68s cubic-bezier(.22,1,.36,1) var(--reveal-delay,0ms)}
+.reveal-pending.is-revealed,.reveal-pending:focus-within{opacity:1;transform:translateY(0)}
+[data-motion="reduced"] .reveal-pending{opacity:1;transform:none;transition:none}
+@media(prefers-reduced-motion:reduce){.reveal-pending{opacity:1;transform:none;transition:none}}

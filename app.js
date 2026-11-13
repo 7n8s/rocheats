@@ -88,6 +88,38 @@
     return n;
   };
 
+  // Each section enters once when it comes into view. Content stays visible if
+  // IntersectionObserver is unavailable; polling never replays an entrance.
+  const revealedKeys = new Set();
+  let revealObserver = null;
+  function observeReveal(node, key, delay = 0) {
+    if (!node || !revealObserver || revealedKeys.has(key)) return;
+    node.dataset.revealKey = key;
+    node.style.setProperty('--reveal-delay', `${delay}ms`);
+    node.classList.add('reveal-pending');
+    revealObserver.observe(node);
+  }
+  function setupReveals() {
+    if (!('IntersectionObserver' in window)) return;
+    revealObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        revealedKeys.add(entry.target.dataset.revealKey);
+        entry.target.classList.add('is-revealed');
+        revealObserver.unobserve(entry.target);
+      }
+    }, { threshold: 0.06, rootMargin: '0px 0px -5% 0px' });
+    [
+      ['.titlebar', 'header', 0], ['.page-intro', 'intro', 70],
+      ['.hero', 'overview', 140], ['.list-heading', 'list-heading', 190],
+      ['.toolbar', 'filters', 240], ['.shop-heading', 'shop-heading', 0],
+      ['.shop-all', 'shop-all', 0], ['.shop-disclaimer', 'shop-note', 0],
+      ['.foot', 'footer', 0],
+    ].forEach(([selector, key, delay]) => observeReveal($(selector), key, delay));
+    document.querySelectorAll('.shop-card').forEach((card, i) =>
+      observeReveal(card, `shop:${card.dataset.shop}`, i * 80));
+  }
+
   // ------------------------------------------------------------------- time
   const ago = (ms) => {
     const d = Math.max(0, (Date.now() - ms) / 1000);
@@ -326,8 +358,13 @@
     if (sig !== lastRows) {
       lastRows = sig;
       const list = $('#rows');
+      if (revealObserver) list.querySelectorAll('[data-reveal-key]').forEach((n) => revealObserver.unobserve(n));
       list.textContent = '';
-      for (const x of shown) list.appendChild(row(x.product, x.item));
+      for (const [i, x] of shown.entries()) {
+        const item = row(x.product, x.item);
+        list.appendChild(item);
+        observeReveal(item, `row:${x.product.key}`, Math.min(i, 4) * 55);
+      }
     }
 
     $('#empty').hidden = !(state.error && !live.length);
@@ -746,6 +783,7 @@
   // ------------------------------------------------------------------- start
   applySettings();
   buildSettings();
+  setupReveals();
   render();
   pollRoblox();
   pollFeed();

@@ -422,6 +422,9 @@
     const behind = live.filter((x) => x.item.rbx && state.roblox.upload && x.item.rbx !== state.roblox.upload).length;
 
     $('#headline').textContent = live.length ? `${up} of ${live.length} updated` : (state.checking ? 'Checking…' : 'No data yet');
+    const healthPercent = live.length ? Math.round(up / live.length * 100) : null;
+    $('#heroPercent').textContent = healthPercent === null ? '—' : `${healthPercent}%`;
+    $('#heroProgress').setAttribute('stroke-dashoffset', String(healthPercent === null ? 100 : 100 - healthPercent));
 
     const stats = $('#stats').children;
     [up, live.length - up, det, behind].forEach((n, i) => {

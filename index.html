@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#0b1111">
 <link rel="icon" href="assets/mark.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/mark.png">
-<link rel="stylesheet" href="styles.css?v=22">
+<link rel="stylesheet" href="styles.css?v=23">
 </head>
 <body>
 <header class="titlebar">
@@ -22,18 +22,15 @@
   <section class="checker-section" aria-label="Status checker">
   <div class="page-intro"><div><p class="eyebrow accent">THE OVERVIEW <span class="eyebrow-line"></span> LIVE MONITOR</p><h2>Status, at a glance<span class="accent">.</span></h2><p class="intro-copy">A clear view of the products you follow.</p></div><div class="intro-index"><span>STATUS CHECKER</span><b>01 / 01</b></div></div>
   <section class="hero" id="hero" aria-label="Status overview">
-    <div class="hero-bar"><span class="hero-bar-label"><span class="hero-bar-dot"></span> MONITOR OVERVIEW</span><span class="hero-source">WEAO <span aria-hidden="true">/</span> STATUS FEED</span></div>
-    <div class="hero-body">
-      <div class="hero-summary">
-        <p class="hero-kicker">PRODUCT HEALTH <span class="hero-kicker-line"></span></p>
-        <div class="hero-head">
-          <div class="hero-heading"><h2 id="headline">Checking…</h2><p class="meta" id="meta">Reading the feed…</p></div>
-          <div class="hero-meter" aria-hidden="true"><svg viewBox="0 0 64 64"><circle class="hero-meter-track" cx="32" cy="32" r="27"/><circle class="hero-meter-progress" id="heroProgress" cx="32" cy="32" r="27" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg><span id="heroPercent">—</span></div>
-        </div>
-        <button class="btn btn-ghost hero-check" id="checkBtn"><svg class="spin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/></svg><span>Check now</span><span class="hero-check-arrow" aria-hidden="true">↗</span></button>
-      </div>
-      <ul class="stats" id="stats"><li><span>Updated</span><b>—</b></li><li><span>Stale</span><b>—</b></li><li><span>Detected</span><b>—</b></li><li><span>Behind Roblox</span><b>—</b></li></ul>
+    <div class="hero-top">
+      <div class="hero-identity"><span class="hero-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6" height="6" rx="1.2"/><rect x="14" y="4" width="6" height="6" rx="1.2"/><rect x="4" y="14" width="6" height="6" rx="1.2"/><rect x="14" y="14" width="6" height="6" rx="1.2"/></svg></span><span><b>STATUS OVERVIEW</b><small>WEAO <span aria-hidden="true">/</span> STATUS FEED</small></span></div>
+      <button class="btn btn-ghost hero-check" id="checkBtn"><svg class="spin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/></svg><span>Check now</span></button>
     </div>
+    <div class="hero-overview">
+      <div class="hero-main"><p class="hero-kicker">PRODUCT STATUS <span></span></p><h2 id="headline">Checking…</h2><p class="meta" id="meta">Reading the feed…</p></div>
+      <div class="hero-health"><div class="hero-health-label"><span>UPDATE COVERAGE</span><b id="heroPercent">—</b></div><div class="hero-track" id="heroTrack" role="progressbar" aria-label="Products reported updated" aria-valuemin="0" aria-valuemax="100" aria-valuetext="No status data"><span id="heroProgress"></span></div><p>Based on products reported by the feed</p></div>
+    </div>
+    <ul class="stats" id="stats"><li><span class="metric-dot metric-up"></span><div><b>—</b><span>Updated</span></div></li><li><span class="metric-dot metric-stale"></span><div><b>—</b><span>Stale</span></div></li><li><span class="metric-dot metric-detected"></span><div><b>—</b><span>Detected</span></div></li><li><span class="metric-dot metric-behind"></span><div><b>—</b><span>Behind Roblox</span></div></li></ul>
     <div class="rbx" id="rbx" hidden><span class="rbx-indicator"><i class="dot" id="rbxDot"></i><span class="caps">ROBLOX BUILD</span></span><b id="rbxVersion">—</b><span class="right" id="rbxCurrent">—</span></div>
   </section>
   <div class="list-heading"><div><p class="eyebrow">THE TRACKER</p><h2>Products <span class="heading-dot" aria-hidden="true"></span></h2></div><span class="count" id="count">9 of 9 products</span></div>
@@ -79,6 +76,6 @@
   <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l10-2v13M9 18c0 1.4-1.3 2.5-3 2.5S3 19.4 3 18s1.3-2.5 3-2.5S9 16.6 9 18ZM19 16c0 1.4-1.3 2.5-3 2.5s-3-1.1-3-2.5 1.3-2.5 3-2.5 3 1.1 3 2.5Z"/></svg><span id="musicLabel">Music off</span>
 </button>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js?v=22"></script>
+<script src="app.js?v=23"></script>
 </body>
 </html>

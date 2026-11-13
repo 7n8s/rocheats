@@ -424,7 +424,15 @@
     $('#headline').textContent = live.length ? `${up} of ${live.length} updated` : (state.checking ? 'Checking…' : 'No data yet');
     const healthPercent = live.length ? Math.round(up / live.length * 100) : null;
     $('#heroPercent').textContent = healthPercent === null ? '—' : `${healthPercent}%`;
-    $('#heroProgress').setAttribute('stroke-dashoffset', String(healthPercent === null ? 100 : 100 - healthPercent));
+    $('#heroProgress').style.width = `${healthPercent === null ? 0 : healthPercent}%`;
+    const track = $('#heroTrack');
+    if (healthPercent === null) {
+      track.removeAttribute('aria-valuenow');
+      track.setAttribute('aria-valuetext', 'No status data');
+    } else {
+      track.setAttribute('aria-valuenow', String(healthPercent));
+      track.setAttribute('aria-valuetext', `${up} of ${live.length} reported updated`);
+    }
 
     const stats = $('#stats').children;
     [up, live.length - up, det, behind].forEach((n, i) => {

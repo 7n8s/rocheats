@@ -120,3 +120,9 @@ html.wheel-smoothing{scroll-behavior:auto!important;scroll-snap-type:none!import
 .metric-icon.metric-detected{color:var(--amber);background:rgba(243,198,124,.08);border-color:rgba(243,198,124,.18)}
 .metric-icon.metric-behind{color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,transparent);border-color:color-mix(in srgb,var(--accent) 18%,transparent)}
 @media(max-width:360px){.hero .stats .stat-label{gap:7px}.metric-icon{width:22px;height:22px;border-radius:7px}.metric-icon svg{width:13px;height:13px}}
+
+/* Noiz-inspired icon tiles: soft monochrome glass and solid white symbols. */
+.hero .stats .metric-icon{width:30px;height:30px;border-radius:9px;color:#f4f7f5;background:rgba(237,244,241,.12);border:1px solid rgba(244,249,246,.08)}
+.hero .stats .metric-icon svg{width:16px;height:16px;fill:currentColor;stroke:none}
+.hero .stats .metric-icon svg .icon-cut{fill:none;stroke:#38413f;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:360px){.hero .stats .metric-icon{width:25px;height:25px;border-radius:8px}.hero .stats .metric-icon svg{width:14px;height:14px}}

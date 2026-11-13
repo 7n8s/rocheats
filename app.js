@@ -894,57 +894,6 @@
     toastTimer = setTimeout(() => t.classList.remove('is-open'), 3200);
   }
 
-  // Official YouTube player; loaded only when the listener opens it. The
-  // platform handles playback rights and the listener starts playback.
-  let musicPlayer = null, musicApiPromise = null, musicOpen = false, musicRequest = 0;
-  function loadMusicApi() {
-    if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
-    if (musicApiPromise) return musicApiPromise;
-    musicApiPromise = new Promise((resolve, reject) => {
-      const previous = window.onYouTubeIframeAPIReady;
-      window.onYouTubeIframeAPIReady = () => {
-        if (typeof previous === 'function') previous();
-        resolve(window.YT);
-      };
-      const script = document.createElement('script');
-      script.src = 'https://www.youtube.com/iframe_api';
-      script.onerror = () => { musicApiPromise = null; reject(new Error('Could not load YouTube')); };
-      document.head.appendChild(script);
-    });
-    return musicApiPromise;
-  }
-  function musicMessage(message) { $('#musicStatus').textContent = message; }
-  $('#musicToggle').addEventListener('click', async () => {
-    musicOpen = !musicOpen;
-    const request = ++musicRequest;
-    $('#musicToggle').setAttribute('aria-expanded', String(musicOpen));
-    $('#musicPanel').hidden = !musicOpen;
-    if (!musicOpen) {
-      if (musicPlayer) { musicPlayer.destroy(); musicPlayer = null; }
-      $('#musicFrame').innerHTML = '<div id="youtubePlayer"></div>';
-      return;
-    }
-    musicMessage('Loading YouTube player…');
-    try {
-      const YT = await loadMusicApi();
-      if (!musicOpen || request !== musicRequest) return;
-      musicPlayer = new YT.Player('youtubePlayer', {
-        videoId: 'y_cTBDxQMvA',
-        width: '100%', height: '200',
-        playerVars: { playsinline: 1, rel: 0, origin: location.origin },
-        events: {
-          onReady: (event) => {
-            event.target.setVolume(20);
-            const frame = event.target.getIframe();
-            if (frame) frame.title = 'Night, Blooming Jasmine by fakemink — YouTube player';
-            musicMessage('Press play in the YouTube player.');
-          },
-          onError: () => musicMessage('Player unavailable. Open the track on YouTube instead.')
-        }
-      });
-    } catch (_) { if (request === musicRequest && musicOpen) musicMessage('Player unavailable. Open the track on YouTube instead.'); }
-  });
-
   // ------------------------------------------------------------------- wiring
   $('#checkBtn').addEventListener('click', () => pollFeed());
   $('#retryBtn').addEventListener('click', () => pollFeed());

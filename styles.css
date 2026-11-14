@@ -204,3 +204,120 @@ html.wheel-smoothing{scroll-behavior:auto!important;scroll-snap-type:none!import
 @media(max-width:360px){.header-inner{padding-left:12px}.brand{gap:8px}.brand .mark{width:32px;height:32px}.brand h1{font-size:12px;white-space:nowrap}.brand p{font-size:7px;letter-spacing:.1em}}
 .maker-credit{font-size:10px}
 @media(max-width:600px){.maker-credit{font-size:9px}}
+
+/* --------------------------------------------------------------------------
+   Interface polish: one visual language across the checker, shop and settings.
+   The dashboard structure and all per-widget reveal behaviour stay unchanged.
+   -------------------------------------------------------------------------- */
+:root{--text2:#bccdc5;--text3:#96aaa0;--text4:#82978c}
+.titlebar{border-color:rgba(205,234,225,.12);background:rgba(9,18,17,.82)}
+.header-inner{min-height:80px}
+.brand{gap:12px}
+.brand .mark{border:1px solid rgba(225,247,237,.1);box-shadow:0 7px 20px rgba(0,0,0,.2)}
+.brand h1{font-size:15px;letter-spacing:-.035em}
+.brand p{color:var(--text3);font-size:9px;letter-spacing:.15em}
+.live{padding:7px 9px;border:1px solid rgba(123,226,170,.13);border-radius:8px;background:rgba(123,226,170,.055);letter-spacing:.12em}
+.live.is-stale{border-color:rgba(243,198,124,.18);background:rgba(243,198,124,.06)}
+.page-intro{margin-bottom:30px}
+.page-intro h2{letter-spacing:-.05em;line-height:1.08}
+.intro-copy{color:var(--text2);line-height:1.6}
+.eyebrow{letter-spacing:.17em}
+.intro-index{color:var(--text3);line-height:1.5}
+.intro-index b{font-weight:650;font-variant-numeric:tabular-nums}
+
+/* Keep the approved one-panel overview, with clearer hierarchy and depth. */
+.hero{border-color:rgba(210,240,225,.17);background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 8%,transparent),transparent 54%),var(--surface);box-shadow:0 18px 55px rgba(4,10,9,.16)}
+.hero-primary{padding:25px 27px}
+.hero-kicker,.breakdown-head{color:var(--text2);letter-spacing:.12em}
+.hero-kicker-mark{width:18px;height:2px}
+.hero-feed{padding:7px 10px;border-radius:9px;letter-spacing:.07em}
+.hero-overline{margin-bottom:10px;font-size:9px;letter-spacing:.15em}
+.hero h2{letter-spacing:-.05em}
+.hero .meta{color:var(--text2);line-height:1.55}
+.hero-source{color:var(--text3)}
+.hero-breakdown{border-color:rgba(210,240,225,.1)}
+.hero .stats li,.hero .stats li:first-child,.hero .stats li:last-child{border-color:rgba(222,244,233,.095);background:rgba(225,246,236,.045);box-shadow:inset 0 1px rgba(255,255,255,.025)}
+.hero .stats .stat-label{color:var(--text2)}
+.hero .stats b{font-size:19px;letter-spacing:-.035em}
+.hero .stats .metric-icon{background:rgba(235,246,241,.14);border-color:rgba(244,249,246,.08)}
+.hero .rbx{border-color:rgba(222,244,233,.09);background:rgba(6,17,15,.28)}
+.hero .rbx b,.hero .rbx .right{font-variant-numeric:tabular-nums}
+.btn,.shop-link,.shop-all,.settings-trigger{transition:background .18s,border-color .18s,color .18s,box-shadow .18s}
+.btn:focus-visible,.chip:focus-visible,.music-toggle:focus-visible,.settings-trigger:focus-visible,.shop-link:focus-visible,.shop-all:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.hero .hero-check{border-color:color-mix(in srgb,var(--accent) 32%,transparent);background:color-mix(in srgb,var(--accent) 11%,transparent)}
+
+/* Product list: readable, informational rows—not clickable cards. */
+.list-heading{margin-top:46px}
+.list-heading h2{font-size:25px;letter-spacing:-.04em}
+.count{color:var(--text2);font-size:10px;font-weight:600;letter-spacing:.02em}
+.toolbar{margin-bottom:13px}
+.chips{gap:3px;padding:4px;border:1px solid rgba(213,239,226,.1);border-radius:12px;background:rgba(12,24,21,.34)}
+.chip{height:34px;padding:0 14px;border-radius:8px;letter-spacing:-.01em}
+.chip.is-on{background:color-mix(in srgb,var(--accent) 14%,transparent);border-color:color-mix(in srgb,var(--accent) 24%,transparent)}
+.toolbar-note{color:var(--text3)}
+.rows{gap:8px}
+.row{border-color:rgba(209,239,227,.14);border-radius:14px;background:linear-gradient(120deg,rgba(229,250,240,.045),transparent 60%),var(--surface);box-shadow:inset 0 1px rgba(255,255,255,.02)}
+.row:hover{border-color:rgba(209,239,227,.14)}
+.tile{border:1px solid rgba(221,246,232,.08);overflow:visible;box-shadow:0 4px 12px rgba(0,0,0,.16)}
+.name{color:var(--text);letter-spacing:.035em}
+.sub{color:var(--text2);font-variant-numeric:tabular-nums}
+.name-flag{padding:3px 6px;border:1px solid rgba(243,198,124,.12);font-weight:700}
+.state.is-up,.state.is-down,.state.is-unverified{border-radius:9px;letter-spacing:.005em}
+.row .state .det-badge{box-shadow:0 0 0 2px #1a2824}
+.row .state .det-badge .tip{padding:8px 10px;border-radius:9px;background:#172521;border-color:rgba(221,246,232,.14);box-shadow:0 8px 24px rgba(0,0,0,.28)}
+.empty{border-color:rgba(209,239,227,.14);border-radius:16px}
+
+/* Store and FAQ use the same surfaces, type scale and accent details. */
+.shop-heading h2,.faq-heading h2{letter-spacing:-.045em}
+.shop-heading p:not(.eyebrow),.faq-heading p:not(.eyebrow){color:var(--text2);line-height:1.6}
+.shop-index,.faq-index{color:var(--text3);letter-spacing:.14em}
+.shop-grid{gap:14px}
+.shop-card{padding:21px;border-color:rgba(209,239,227,.15);border-radius:17px;background:linear-gradient(145deg,rgba(226,250,237,.055),transparent 58%),var(--surface);box-shadow:inset 0 1px rgba(255,255,255,.025),0 12px 35px rgba(0,0,0,.1)}
+.shop-number{color:var(--text3);letter-spacing:.11em}
+.shop-status{font-weight:600}
+.shop-logo{border:1px solid rgba(221,246,232,.1)}
+.shop-copy h3{letter-spacing:-.04em}
+.shop-copy p{color:var(--text2);line-height:1.6}
+.shop-price{border-color:rgba(220,241,229,.1)}
+.shop-link{min-height:43px;border-radius:10px}
+.shop-all{min-height:46px;padding:10px 15px;border-color:rgba(214,239,226,.13);border-radius:11px}
+.shop-disclaimer{color:var(--text2)}
+.faq-grid{gap:12px}
+.faq-card{border-color:rgba(209,239,227,.15);border-radius:16px;background:linear-gradient(145deg,rgba(226,250,237,.05),transparent 58%),var(--surface);box-shadow:inset 0 1px rgba(255,255,255,.025)}
+.faq-number{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:25px;padding:0 6px;border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);border-radius:7px;background:color-mix(in srgb,var(--accent) 8%,transparent);font-size:9px}
+.faq-card h3{margin-top:15px;line-height:1.35}
+.faq-card ul{color:var(--text2);line-height:1.7}
+.faq-important{border-radius:12px;line-height:1.7}
+.foot{color:var(--text3);line-height:1.6;padding-bottom:28px}
+
+/* Customization sheet and persistent controls. */
+.scrim{background:rgba(3,9,8,.5)}
+.sheet{background:#111c19;border-color:rgba(217,245,231,.14);box-shadow:-20px 0 65px rgba(0,0,0,.4)}
+.sheet-head h2{letter-spacing:-.045em}
+.sheet-head p:not(.eyebrow),.section-heading p:not(.eyebrow){color:var(--text2);line-height:1.55}
+.settings-section{border-color:rgba(215,241,229,.1)}
+.section-heading h3{letter-spacing:-.03em}
+.swatch{border-color:rgba(226,255,240,.16)}
+.swatch.is-on{box-shadow:0 0 0 2px var(--accent) inset,0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent)}
+.seg{background:#0c1714;border-color:rgba(215,241,229,.12)}
+.seg button.is-on{background:#2b4038}
+.settings-trigger,.music-control{border-color:rgba(215,241,229,.14);background:rgba(17,29,26,.95)}
+.maker-credit{color:var(--text2);border:1px solid rgba(215,241,229,.1);background:rgba(13,24,21,.9)}
+.music-hint{color:var(--text2);font-weight:700}
+
+/* Keep small screens compact, with enough room for labels and fixed controls. */
+@media(max-width:700px){.hero-primary{padding:21px 19px}.hero-breakdown{padding:19px}.hero .stats b{font-size:18px}}
+@media(max-width:600px){
+ .header-inner{min-height:70px}.page-intro{margin-bottom:22px}
+ .page-intro h2{line-height:1.1}.intro-copy{line-height:1.55}
+ .list-heading{margin-top:34px}.list-heading h2{font-size:23px}
+ .chips{width:100%;padding:3px}.chip{flex:1;min-width:0;height:34px;padding:0 7px;font-size:10px}
+ .rows{gap:8px}.row{border-radius:13px}
+ .shop-grid{gap:10px}.shop-card{padding:16px}.shop-copy p{line-height:1.5}
+ .faq-card{padding:18px}.faq-card h3{margin-top:13px}.faq-card ul{line-height:1.65}
+ .foot{padding-bottom:60px}
+}
+@media(max-width:360px){.hero-primary{padding:19px 15px}.hero-breakdown{padding:17px 15px 18px}.chip{font-size:9px}.hero .stats b{font-size:17px}}
+[data-theme="flat"] .hero,[data-theme="flat"] .row,[data-theme="flat"] .shop-card,[data-theme="flat"] .faq-card{background:var(--surface);box-shadow:none}
+[data-density="compact"] .row{min-height:53px}
+@media(max-width:360px){.brand{gap:8px}.brand h1{font-size:12px;white-space:nowrap}.brand p{font-size:7px;letter-spacing:.1em}}

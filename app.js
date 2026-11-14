@@ -171,6 +171,19 @@
   function setupActiveSection() {
     const sections = [...document.querySelectorAll('.checker-section, .shop-section, .faq-section')];
     let active = null, frame = 0;
+    const navLinks = [...document.querySelectorAll('.site-nav a')];
+    let currentNav = '';
+    const updateNav = (section, middle) => {
+      if (!section) return;
+      const target = section.id === 'shop' ? 'shop' : section.id === 'faq' ? 'faq' :
+        ($('#products').getBoundingClientRect().top <= middle ? 'products' : 'overview');
+      if (currentNav === target) return;
+      currentNav = target;
+      for (const link of navLinks) {
+        if (link.getAttribute('href') === `#${target}`) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      }
+    };
     const update = () => {
       frame = 0;
       const middle = innerHeight / 2;
@@ -185,6 +198,7 @@
           return visible > best.visible ? { section, visible } : best;
         }, { section: null, visible: 0 }).section;
       }
+      updateNav(next, middle);
       if (next === active) { keepVisibleAtTop(active); return; }
       if (active) active.classList.remove('is-active-section');
       active = next;

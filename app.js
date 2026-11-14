@@ -939,7 +939,7 @@
   let explicitlyMuted = false;
   backgroundMusic.volume = 0.18;
   backgroundMusic.src = backgroundMusic.dataset.src;
-  // The local track is trimmed to start at 00:15, including on every loop.
+  // The local track is trimmed to start at 00:13, including on every loop.
   function syncMusicControl() {
     const playing = !backgroundMusic.paused && !backgroundMusic.ended;
     const silent = !playing || backgroundMusic.muted || backgroundMusic.volume === 0;

@@ -214,9 +214,9 @@
     }
     const limit = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
     scrollTarget = Math.max(0, Math.min(limit, scrollTarget));
-    const elapsed = scrollTime ? Math.min(40, Math.max(1, time - scrollTime)) : 16;
+    const elapsed = scrollTime ? Math.min(100, Math.max(1, time - scrollTime)) : 16;
     scrollTime = time;
-    scrollPosition += (scrollTarget - scrollPosition) * (1 - Math.exp(-elapsed / 105));
+    scrollPosition += (scrollTarget - scrollPosition) * (1 - Math.exp(-elapsed / 155));
     if (Math.abs(scrollTarget - scrollPosition) < 0.5) {
       window.scrollTo(0, scrollTarget);
       stopSmoothScroll(); return;
@@ -929,25 +929,63 @@
     toastTimer = setTimeout(() => t.classList.remove('is-open'), 3200);
   }
 
-  // Optional local background music. Browsers require a user gesture to play;
-  // the track is not downloaded until the listener asks for it.
+  // Browsers can block audible autoplay until a gesture. Try on load, then
+  // retry on the first permitted interaction; always respect a listener mute.
   const backgroundMusic = $('#backgroundMusic');
   const musicControl = $('#musicControl');
+  const musicVolume = $('#musicVolume');
+  const musicHint = $('#musicHint');
+  let autoplayBlocked = false, startingMusic = false;
+  let explicitlyMuted = false;
   backgroundMusic.volume = 0.18;
+  backgroundMusic.src = backgroundMusic.dataset.src;
+  // The local track is trimmed to start at 00:15, including on every loop.
   function syncMusicControl() {
     const playing = !backgroundMusic.paused && !backgroundMusic.ended;
-    musicControl.setAttribute('aria-pressed', String(playing));
-    musicControl.setAttribute('aria-label', `${playing ? 'Pause' : 'Play'} background music: Whole Team Straight by ovine hall`);
-    $('#musicLabel').textContent = playing ? 'Music on' : 'Music off';
+    const silent = !playing || backgroundMusic.muted || backgroundMusic.volume === 0;
+    musicControl.classList.toggle('is-muted', silent);
+    musicControl.setAttribute('aria-pressed', String(!silent));
+    musicControl.setAttribute('aria-label', !playing ? 'Play background music: Whole Team Straight by ovine hall' : silent ? 'Unmute background music' : 'Mute background music');
+    musicHint.textContent = autoplayBlocked && !playing ? 'TAP TO PLAY' : '';
+    const percent = Math.round(backgroundMusic.volume * 100);
+    musicVolume.value = percent;
+    musicVolume.style.setProperty('--volume', `${silent ? 0 : percent}%`);
   }
-  backgroundMusic.addEventListener('play', syncMusicControl);
+  async function startMusic() {
+    if (startingMusic || !backgroundMusic.paused) return;
+    startingMusic = true;
+    try {
+      await backgroundMusic.play();
+      autoplayBlocked = false;
+    } catch (_) { autoplayBlocked = true; }
+    finally { startingMusic = false; syncMusicControl(); }
+  }
+  backgroundMusic.addEventListener('play', () => { autoplayBlocked = false; syncMusicControl(); });
   backgroundMusic.addEventListener('pause', syncMusicControl);
-  musicControl.addEventListener('click', async () => {
-    if (!backgroundMusic.paused) { backgroundMusic.pause(); syncMusicControl(); return; }
-    if (!backgroundMusic.hasAttribute('src')) backgroundMusic.src = backgroundMusic.dataset.src;
-    try { await backgroundMusic.play(); syncMusicControl(); }
-    catch (_) { syncMusicControl(); toast('Could not play the music in this browser.'); }
+  backgroundMusic.addEventListener('volumechange', syncMusicControl);
+  musicControl.addEventListener('click', () => {
+    if (backgroundMusic.paused) { explicitlyMuted = false; backgroundMusic.muted = false; if (backgroundMusic.volume === 0) backgroundMusic.volume = 0.18; startMusic(); return; }
+    const silent = backgroundMusic.muted || backgroundMusic.volume === 0;
+    explicitlyMuted = !silent;
+    if (silent && backgroundMusic.volume === 0) backgroundMusic.volume = 0.18;
+    backgroundMusic.muted = !silent;
+    syncMusicControl();
   });
+  musicVolume.addEventListener('input', () => {
+    backgroundMusic.volume = Number(musicVolume.value) / 100;
+    explicitlyMuted = backgroundMusic.volume === 0;
+    backgroundMusic.muted = false;
+    syncMusicControl();
+    if (backgroundMusic.paused && backgroundMusic.volume > 0) startMusic();
+  });
+  function retryAutoplay(event) {
+    if (!autoplayBlocked || explicitlyMuted || event.target.closest?.('.music-control')) return;
+    startMusic();
+  }
+  document.addEventListener('pointerdown', retryAutoplay, true);
+  document.addEventListener('keydown', retryAutoplay, true);
+  syncMusicControl();
+  startMusic();
 
   // ------------------------------------------------------------------- wiring
   $('#checkBtn').addEventListener('click', () => pollFeed());

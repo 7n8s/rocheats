@@ -84,7 +84,7 @@
     return n;
   };
 
-  // Reversible viewport fades. Content stays visible when the browser does
+  // Reversible viewport slides. Content stays visible when the browser does
   // not support IntersectionObserver or reduced motion is enabled.
   let revealObserver = null, rowRevealObserver = null, headerRevealObserver = null;
   function observeReveal(node, key, delay = 0, observer = revealObserver) {
@@ -100,11 +100,11 @@
       for (const entry of entries) {
         const visible = entry.isIntersecting && entry.intersectionRatio >= observer.thresholds[0];
         // Once a widget has appeared, keep it visible while its section is
-        // active. Also handle jumps directly into the top fade-out zone.
+        // active. Also handle jumps directly into the top exit zone.
         if (visible || (entry.boundingClientRect.bottom > 0 && entry.boundingClientRect.top < window.innerHeight * .28)) {
           entry.target.classList.add('has-entered');
         }
-        // Exiting above moves up slightly; below enters from below.
+        // Track whether content has left above the observer viewport.
         const above = !visible && entry.boundingClientRect.bottom <= (entry.rootBounds?.top ?? 0) + entry.boundingClientRect.height * observer.thresholds[0];
         entry.target.classList.toggle('is-above', above);
         entry.target.classList.toggle('is-revealed', visible);
@@ -155,7 +155,7 @@
   }
 
   // A widget can land in the observer's top margin after a scroll jump. It is
-  // still on screen and must not remain transparent in the active section.
+  // still on screen and must not remain hidden in the active section.
   function keepVisibleAtTop(section) {
     if (!section) return;
     const candidates = [...section.querySelectorAll('.reveal-pending:not(.has-entered)')];

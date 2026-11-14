@@ -321,3 +321,9 @@ html.wheel-smoothing{scroll-behavior:auto!important;scroll-snap-type:none!import
 [data-theme="flat"] .hero,[data-theme="flat"] .row,[data-theme="flat"] .shop-card,[data-theme="flat"] .faq-card{background:var(--surface);box-shadow:none}
 [data-density="compact"] .row{min-height:53px}
 @media(max-width:360px){.brand{gap:8px}.brand h1{font-size:12px;white-space:nowrap}.brand p{font-size:7px;letter-spacing:.1em}}
+
+/* A single gentle entrance for the entire site, including fixed controls. */
+@keyframes site-load-fade{from{opacity:0}to{opacity:1}}
+body{animation:site-load-fade 2s ease-in-out backwards}
+@media(prefers-reduced-motion:reduce){body{animation:none}}
+[data-motion="reduced"] body{animation:none}

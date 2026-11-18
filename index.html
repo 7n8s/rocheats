@@ -10,33 +10,35 @@
 <link rel="icon" href="assets/mark.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/mark.png">
 <link rel="stylesheet" href="styles.css?v=36">
+<link rel="stylesheet" href="human.css?v=1">
 </head>
 <body>
 <header class="titlebar">
   <div class="header-inner">
     <div class="brand"><img class="mark" src="assets/mark.png" alt="" width="38" height="38"><div><h1>RoCheats <span>Monitor</span></h1><p>YOUR STATUS, AT A GLANCE</p></div></div>
+    <nav class="site-nav" aria-label="Site sections"><div class="site-nav-inner">
+      <a href="#overview" aria-current="location">Overview</a>
+      <a href="#products">Products</a>
+      <a href="#shop">Shop</a>
+      <a href="#faq">FAQ</a>
+    </div></nav>
     <div class="header-actions"><span class="live" id="livePill"><i></i>LIVE</span></div>
   </div>
-  <nav class="site-nav" aria-label="Site sections"><div class="site-nav-inner">
-    <a href="#overview" aria-current="location"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg><span>01</span> Overview</a>
-    <a href="#products"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><path d="M3 7h.1M3 12h.1M3 17h.1"/></svg><span>02</span> Products</a>
-    <a href="#shop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 12H4L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg><span>03</span> Shop</a>
-    <a href="#faq"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4a2.5 2.5 0 1 1 4.1 1.9c-.9.7-1.7 1.1-1.7 2.3M12 17h.01"/></svg><span>04</span> FAQ</a>
-  </div></nav>
-  <div class="sidebar-foot"><span>STATUS SOURCES</span><strong>WEAO <i>/</i> ROBLOX</strong></div>
 </header>
 <main id="main">
   <section class="checker-section" id="overview" aria-label="Status checker">
-  <div class="page-intro"><div><p class="eyebrow accent">THE STATUS CHECKER <span class="eyebrow-line"></span> YOUR DASHBOARD</p><h2>Everything at a glance<span class="accent">.</span></h2><p class="intro-copy">The updates you care about, all in one place.</p></div><div class="intro-index"><span>MONITORING</span><b>STATUS / 01</b></div></div>
+  <div class="page-intro">
+    <div class="intro-main"><p class="eyebrow accent">ROCHEATS STATUS CHECKER</p><h2>Know what’s<br><span class="intro-accent">up to date.</span></h2><p class="intro-copy">A quick look at the products you follow, all in one place.</p></div>
+    <div class="intro-index"><span>THE SOURCES</span><b>WEAO for products.<br>Roblox for the build.</b><i aria-hidden="true"></i></div>
+  </div>
   <section class="hero" id="hero" aria-label="Status overview">
-    <div class="hero-masthead"><span><i></i> YOUR DASHBOARD <b>/</b> STATUS SUMMARY</span><span>WEAO <b>·</b> ROBLOX</span></div>
     <div class="hero-primary">
-      <div class="hero-primary-top"><span class="hero-kicker"><span class="hero-kicker-mark"></span> PRODUCT MONITOR</span><span class="hero-feed" id="heroFeed"><span class="hero-feed-dot"></span><span id="heroFeedText">CHECKING</span></span></div>
-      <div class="hero-primary-main"><p class="hero-overline">PRODUCTS REPORTED</p><h2 id="headline">Checking…</h2><p class="meta" id="meta">Reading the feed…</p></div>
+      <div class="hero-primary-top"><span class="hero-kicker"><span class="hero-kicker-mark"></span> THE LATEST CHECK</span><span class="hero-feed" id="heroFeed"><span class="hero-feed-dot"></span><span id="heroFeedText">CHECKING</span></span></div>
+      <div class="hero-primary-main"><p class="hero-overline">PRODUCT STATUS</p><h2 id="headline">Checking…</h2><p class="meta" id="meta">Reading the feed…</p></div>
       <div class="hero-primary-bottom"><button class="btn btn-ghost hero-check" id="checkBtn"><svg class="spin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/></svg><span>Check now</span></button><span class="hero-source">SOURCE <span aria-hidden="true">/</span> WEAO</span></div>
     </div>
     <div class="hero-breakdown">
-      <div class="breakdown-head"><span>STATUS BREAKDOWN</span><span id="heroReported">— REPORTED</span></div>
+      <div class="breakdown-head"><span>THE BREAKDOWN</span><span id="heroReported">— REPORTED</span></div>
       <ul class="stats" id="stats">
         <li><span class="stat-label"><span class="metric-icon metric-up" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9.3 18.5 3.8 13l2.3-2.3 3.2 3.2 8.6-8.6 2.3 2.3-10.9 10.9Z"/></svg></span>Updated</span><b>—</b></li>
         <li><span class="stat-label"><span class="metric-icon metric-stale" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path class="icon-cut" d="M12 6.8V12l3.5 2.1"/></svg></span>Stale</span><b>—</b></li>
@@ -46,24 +48,24 @@
     </div>
     <div class="rbx" id="rbx" hidden><span class="rbx-indicator"><i class="dot" id="rbxDot"></i><span class="caps">ROBLOX BUILD</span></span><b id="rbxVersion">—</b><span class="right" id="rbxCurrent">—</span></div>
   </section>
-  <div class="list-heading" id="products"><div><p class="eyebrow">01 / THE TRACKER</p><h2>Product status <span class="heading-dot" aria-hidden="true"></span></h2></div><span class="count" id="count">9 of 9 products</span></div>
-  <div class="toolbar"><div class="chips" role="tablist" aria-label="Filter products"><button role="tab" aria-selected="true" class="chip is-on" data-filter="0">All products</button><button role="tab" aria-selected="false" class="chip" data-filter="1">Updated</button><button role="tab" aria-selected="false" class="chip" data-filter="2">Not updated</button></div><span class="toolbar-note">STATUS OVERVIEW <span>↗</span></span></div>
+  <div class="list-heading" id="products"><div><p class="eyebrow">THE TRACKER</p><h2>What we’re watching<span class="heading-dot" aria-hidden="true"></span></h2><p class="section-intro">The latest reported status for each product.</p></div><span class="count" id="count">9 of 9 products</span></div>
+  <div class="toolbar"><div class="chips" role="tablist" aria-label="Filter products"><button role="tab" aria-selected="true" class="chip is-on" data-filter="0">All products</button><button role="tab" aria-selected="false" class="chip" data-filter="1">Updated</button><button role="tab" aria-selected="false" class="chip" data-filter="2">Not updated</button></div><span class="toolbar-note">UPDATED AS REPORTED <span>↗</span></span></div>
   <div class="tracker-labels" aria-hidden="true"><span>PRODUCT <i>/</i> VERSION</span><span>UPDATE STATUS</span></div>
   <ul class="rows" id="rows" aria-live="polite"></ul>
   <div class="empty" id="empty" hidden><p><b id="emptyTitle">Can’t reach the feed</b></p><p id="emptyBody">Check your connection and try again.</p><div class="empty-actions"><button class="btn btn-accent" id="retryBtn">Retry</button><a class="link" href="?demo=1">Preview with sample data</a></div></div>
   </section>
   <section id="shop" class="shop-section" aria-labelledby="shop-title">
-    <div class="shop-heading"><div><p class="eyebrow accent">THE COLLECTION</p><h2 id="shop-title">Find your next tool<span class="accent">.</span></h2><p>Shop products directly from RoCheats.</p></div><span class="shop-index">02 / PRODUCTS</span></div>
+    <div class="shop-heading"><div><p class="eyebrow accent">THE SHOP</p><h2 id="shop-title">From RoCheats<span class="accent">.</span></h2><p>Explore a few products from the store.</p></div><span class="shop-index">THE COLLECTION / 03</span></div>
     <div class="shop-grid">
-      <article class="shop-card" data-shop="potassium"><div class="shop-card-top"><span class="shop-number">01 / POTASSIUM</span><span class="shop-status">Checking status</span></div><div class="shop-logo"><img src="assets/logo-potassium.jpg" alt=""></div><div class="shop-copy"><h3>Potassium</h3><p>Explore Potassium and check the current offer.</p></div><div class="shop-price"><span>STORE</span><strong>Check price on RoCheats</strong></div><a class="shop-link" href="https://rocheats.com/product?id=potassium-roblox-executor&amp;ref=serx" target="_blank" rel="noopener noreferrer" data-shop-link>Shop on RoCheats <span aria-hidden="true">↗</span></a></article>
-      <article class="shop-card" data-shop="wave"><div class="shop-card-top"><span class="shop-number">02 / WAVE</span><span class="shop-status">Checking status</span></div><div class="shop-logo"><img src="assets/logo-wave.jpg" alt=""></div><div class="shop-copy"><h3>Wave</h3><p>Explore Wave and check the current offer.</p></div><div class="shop-price"><span>STORE</span><strong>Check price on RoCheats</strong></div><a class="shop-link" href="https://rocheats.com/product?id=wave-roblox-executor&amp;ref=serx" target="_blank" rel="noopener noreferrer" data-shop-link>Shop on RoCheats <span aria-hidden="true">↗</span></a></article>
-      <article class="shop-card" data-shop="volt"><div class="shop-card-top"><span class="shop-number">03 / VOLT</span><span class="shop-status">Checking status</span></div><div class="shop-logo"><img src="assets/logo-volt.jpg" alt=""></div><div class="shop-copy"><h3>Volt</h3><p>Explore Volt and check the current offer.</p></div><div class="shop-price"><span>STORE</span><strong>Check price on RoCheats</strong></div><a class="shop-link" href="https://rocheats.com/product?id=volt-roblox-executor&amp;ref=serx" target="_blank" rel="noopener noreferrer" data-shop-link>Shop on RoCheats <span aria-hidden="true">↗</span></a></article>
+      <article class="shop-card" data-shop="potassium"><div class="shop-card-top"><span class="shop-number">01 / POTASSIUM</span><span class="shop-status">Checking status</span></div><div class="shop-logo"><img src="assets/logo-potassium.jpg" alt=""></div><div class="shop-copy"><h3>Potassium</h3><p>See the current offer for Potassium.</p></div><div class="shop-price"><span>STORE</span><strong>Check price on RoCheats</strong></div><a class="shop-link" href="https://rocheats.com/product?id=potassium-roblox-executor&amp;ref=serx" target="_blank" rel="noopener noreferrer" data-shop-link>Shop on RoCheats <span aria-hidden="true">↗</span></a></article>
+      <article class="shop-card" data-shop="wave"><div class="shop-card-top"><span class="shop-number">02 / WAVE</span><span class="shop-status">Checking status</span></div><div class="shop-logo"><img src="assets/logo-wave.jpg" alt=""></div><div class="shop-copy"><h3>Wave</h3><p>See the current offer for Wave.</p></div><div class="shop-price"><span>STORE</span><strong>Check price on RoCheats</strong></div><a class="shop-link" href="https://rocheats.com/product?id=wave-roblox-executor&amp;ref=serx" target="_blank" rel="noopener noreferrer" data-shop-link>Shop on RoCheats <span aria-hidden="true">↗</span></a></article>
+      <article class="shop-card" data-shop="volt"><div class="shop-card-top"><span class="shop-number">03 / VOLT</span><span class="shop-status">Checking status</span></div><div class="shop-logo"><img src="assets/logo-volt.jpg" alt=""></div><div class="shop-copy"><h3>Volt</h3><p>See the current offer for Volt.</p></div><div class="shop-price"><span>STORE</span><strong>Check price on RoCheats</strong></div><a class="shop-link" href="https://rocheats.com/product?id=volt-roblox-executor&amp;ref=serx" target="_blank" rel="noopener noreferrer" data-shop-link>Shop on RoCheats <span aria-hidden="true">↗</span></a></article>
     </div>
     <a class="shop-all" href="https://rocheats.com/?ref=serx" target="_blank" rel="noopener noreferrer">Browse all products on RoCheats <span aria-hidden="true">↗</span></a>
     <p class="shop-disclaimer">These store links include a referral code. Status data comes from WEAO; prices, license options and checkout are shown on RoCheats and may change.</p>
   </section>
   <section id="faq" class="faq-section" aria-labelledby="faq-title">
-    <div class="faq-heading"><div><p class="eyebrow accent">HELP &amp; INFORMATION</p><div class="faq-title-line"><img class="faq-logo" src="assets/mark.png" alt="" width="44" height="44"><h2 id="faq-title">ROCHEATS — DISCORD FAQ</h2></div><p>Answers to common questions about orders and support.</p></div><span class="faq-index">03 / FAQ</span></div>
+    <div class="faq-heading"><div><p class="eyebrow accent">GOOD TO KNOW</p><div class="faq-title-line"><img class="faq-logo" src="assets/mark.png" alt="" width="44" height="44"><h2 id="faq-title">ROCHEATS — DISCORD FAQ</h2></div><p>Answers to common questions about orders and support.</p></div><span class="faq-index">03 / FAQ</span></div>
     <div class="faq-grid">
       <article class="faq-card"><span class="faq-number">01</span><h3>How long does delivery take?</h3><ul><li>Card: Instant delivery.</li><li>Crypto: Usually instant, but may take 30–60 minutes to process.</li></ul></article>
       <article class="faq-card"><span class="faq-number">02</span><h3>Haven’t received your license key?</h3><ul><li>Check your spam/junk folder.</li><li>Check your RoCheats dashboard.</li><li>If it hasn’t arrived within 15–30 minutes, open a support ticket.</li></ul></article>

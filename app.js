@@ -135,7 +135,7 @@
     }, { passive: true });
     observeReveal($('.titlebar'), 'header', 0, headerRevealObserver);
     // The introductory title must also be fully visible at the top of the page.
-    observeReveal($('.page-intro'), 'intro', 70, headerRevealObserver);
+    observeReveal($('.desk-masthead'), 'intro', 70, headerRevealObserver);
     [
       ['.hero', 'overview', 140], ['.list-heading', 'list-heading', 190],
       ['.toolbar', 'filters', 240], ['.shop-heading', 'shop-heading', 0],
@@ -176,7 +176,7 @@
     const updateNav = (section, middle) => {
       if (!section) return;
       const target = section.id === 'shop' ? 'shop' : section.id === 'faq' ? 'faq' :
-        ($('#products').getBoundingClientRect().top <= middle ? 'products' : 'overview');
+        ($('#products').getBoundingClientRect().top <= Math.min(90, middle) ? 'products' : 'overview');
       if (currentNav === target) return;
       currentNav = target;
       for (const link of navLinks) {

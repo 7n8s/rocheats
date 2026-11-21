@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="experience.css?v=1">
 <link rel="stylesheet" href="console.css?v=1">
 <link rel="stylesheet" href="minimal.css?v=1">
+<link rel="stylesheet" href="open-layout.css?v=1">
 </head>
 <body>
 <header class="titlebar">
@@ -29,7 +30,7 @@
 <main id="main">
   <section class="checker-section" id="overview" aria-label="Status checker">
     <div class="signal-intro">
-      <div class="signal-copy"><p class="signal-eyebrow">ROCHEATS STATUS CHECKER</p><h2>Status, at a glance.</h2><p class="signal-description">Product updates and the latest Roblox build, in one place.</p></div>
+      <div class="signal-copy"><p class="signal-eyebrow">ROCHEATS STATUS CHECKER</p></div>
     </div>
   <section class="hero" id="hero" aria-label="Status overview">
     <div class="hero-primary">
@@ -49,7 +50,7 @@
     <div class="rbx" id="rbx" hidden><span class="rbx-indicator"><i class="dot" id="rbxDot"></i><span class="caps">ROBLOX BUILD</span></span><b id="rbxVersion">—</b><span class="right" id="rbxCurrent">—</span></div>
   </section>
     <div class="tracker-workspace" id="products">
-  <div class="list-heading"><div><p class="eyebrow">PRODUCTS</p><h2>Products<span class="heading-dot" aria-hidden="true"></span></h2><p class="section-intro">The latest reported status for each product.</p></div><span class="count" id="count">9 of 9 products</span></div>
+  <div class="list-heading"><div><p class="eyebrow">PRODUCTS</p><h2>Products<span class="heading-dot" aria-hidden="true"></span></h2><p class="section-intro">Latest status and version, as reported.</p></div><span class="count" id="count">9 of 9 products</span></div>
   <div class="toolbar"><div class="chips" role="tablist" aria-label="Filter products"><button role="tab" aria-selected="true" class="chip is-on" data-filter="0">All products</button><button role="tab" aria-selected="false" class="chip" data-filter="1">Updated</button><button role="tab" aria-selected="false" class="chip" data-filter="2">Not updated</button></div><span class="toolbar-note">DATA FROM WEAO <span>↗</span></span></div>
   <div class="tracker-labels" aria-hidden="true"><span>PRODUCT <i>/</i> VERSION</span><span>UPDATE STATUS</span></div>
   <ul class="rows" id="rows" aria-live="polite"></ul>
@@ -57,7 +58,7 @@
     </div>
   </section>
   <section id="shop" class="shop-section" aria-labelledby="shop-title">
-    <div class="shop-heading"><div><p class="eyebrow accent">ROCHEATS</p><h2 id="shop-title">Shop<span class="accent">.</span></h2><p>A few products from the store.</p></div><span class="shop-index">ROCHEATS / STORE</span></div>
+    <div class="shop-heading"><div><p class="eyebrow accent">ROCHEATS</p><h2 id="shop-title">Shop<span class="accent">.</span></h2><p>Explore products on RoCheats.</p></div><span class="shop-index">ROCHEATS / STORE</span></div>
     <div class="shop-grid">
       <article class="shop-card" data-shop="potassium"><div class="shop-card-top"><span class="shop-number">01 / POTASSIUM</span><span class="shop-status">Checking status</span></div><div class="shop-logo"><img src="assets/logo-potassium.jpg" alt=""></div><div class="shop-copy"><h3>Potassium</h3><p>See the current offer for Potassium.</p></div><div class="shop-price"><span>STORE</span><strong>Check price on RoCheats</strong></div><a class="shop-link" href="https://rocheats.com/product?id=potassium-roblox-executor&amp;ref=serx" target="_blank" rel="noopener noreferrer" data-shop-link>Shop on RoCheats <span aria-hidden="true">↗</span></a></article>
       <article class="shop-card" data-shop="wave"><div class="shop-card-top"><span class="shop-number">02 / WAVE</span><span class="shop-status">Checking status</span></div><div class="shop-logo"><img src="assets/logo-wave.jpg" alt=""></div><div class="shop-copy"><h3>Wave</h3><p>See the current offer for Wave.</p></div><div class="shop-price"><span>STORE</span><strong>Check price on RoCheats</strong></div><a class="shop-link" href="https://rocheats.com/product?id=wave-roblox-executor&amp;ref=serx" target="_blank" rel="noopener noreferrer" data-shop-link>Shop on RoCheats <span aria-hidden="true">↗</span></a></article>
@@ -67,7 +68,7 @@
     <p class="shop-disclaimer">These store links include a referral code. Status data comes from WEAO; prices, license options and checkout are shown on RoCheats and may change.</p>
   </section>
   <section id="faq" class="faq-section" aria-labelledby="faq-title">
-    <div class="faq-heading"><div><p class="eyebrow accent">ROCHEATS — DISCORD FAQ</p><div class="faq-title-line"><img class="faq-logo" src="assets/mark.png" alt="" width="44" height="44"><h2 id="faq-title">Frequently asked questions<span class="accent">.</span></h2></div><p>Answers to common questions about orders and support.</p></div><span class="faq-index">03 / FAQ</span></div>
+    <div class="faq-heading"><div><p class="eyebrow accent">ROCHEATS — DISCORD FAQ</p><div class="faq-title-line"><img class="faq-logo" src="assets/mark.png" alt="" width="44" height="44"><h2 id="faq-title">Questions & answers<span class="accent">.</span></h2></div><p>Answers to common questions about orders and support.</p></div><span class="faq-index">03 / FAQ</span></div>
     <div class="faq-grid">
       <details class="faq-card"><summary><span class="faq-number">01</span><span class="faq-question">How long does delivery take?</span><span class="faq-plus" aria-hidden="true"></span></summary><ul><li>Card: Instant delivery.</li><li>Crypto: Usually instant, but may take 30–60 minutes to process.</li></ul></details>
       <details class="faq-card"><summary><span class="faq-number">02</span><span class="faq-question">Haven’t received your license key?</span><span class="faq-plus" aria-hidden="true"></span></summary><ul><li>Check your spam/junk folder.</li><li>Check your RoCheats dashboard.</li><li>If it hasn’t arrived within 15–30 minutes, open a support ticket.</li></ul></details>

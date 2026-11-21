@@ -10,5 +10,5 @@
 /app.js
   Cache-Control: public, max-age=300
 
-/styles.css
+/experience.css
   Cache-Control: public, max-age=300

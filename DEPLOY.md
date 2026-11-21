@@ -11,14 +11,14 @@ server, no account needed for the app itself.
 2. Left sidebar → **Workers & Pages** → **Create** → **Pages** → **Upload assets**.
 3. Project name: `rocheats-monitor` (this becomes the URL:
    `rocheats-monitor.pages.dev`).
-4. Drag the whole **`web`** folder into the uploader. Upload.
+4. Drag the whole **website** folder into the uploader. Upload.
 5. You get `https://rocheats-monitor.pages.dev` in about 30 seconds.
 
 To update later: same project → **Create new deployment** → drag the folder again.
 Old versions stay available and roll back in one click.
 
 > Drag the folder itself, not the zip. The uploader wants `index.html`,
-> `styles.css`, `app.js` and `assets/` at the top level.
+> `experience.css`, `app.js` and `assets/` at the top level.
 
 ---
 
@@ -26,7 +26,7 @@ Old versions stay available and roll back in one click.
 
 ```bash
 npx wrangler login                       # opens the browser once
-npx wrangler pages deploy web --project-name rocheats-monitor
+npx wrangler pages deploy . --project-name rocheats-monitor
 ```
 
 Every later deploy is the same one-liner. `_headers` is picked up automatically.
@@ -46,7 +46,7 @@ gh repo create rocheats-monitor --public --source=RoCheatsMonitor --push
 Then on GitHub: **Settings → Pages → Build and deployment**
 
 - Source: **Deploy from a branch**
-- Branch: `main` · Folder: **`/web`**
+- Branch: `main` · Folder: **`/ (root)`**
 - Save.
 
 Live at `https://<your-username>.github.io/rocheats-monitor/` in ~1 minute. Every push
@@ -59,15 +59,15 @@ to `main` redeploys.
 
 ## Also fine, if you prefer
 
-- **Netlify**: drag `web` onto <https://app.netlify.com/drop>. Instant URL, `_headers`
+- **Netlify**: drag the website folder onto <https://app.netlify.com/drop>. Instant URL, `_headers`
   respected.
-- **Vercel**: `npx vercel --prod web`.
+- **Vercel**: `npx vercel --prod .`.
 
 ---
 
 ## Making it *yours*
 
-Everything you would want to change is near the top of `web/app.js`:
+Everything you would want to change is near the top of `app.js`:
 
 | What | Where |
 |---|---|
@@ -76,8 +76,8 @@ Everything you would want to change is near the top of `web/app.js`:
 | Accent presets | `ACCENTS` array |
 | Default check interval, notification default | `settings` fallback object |
 | Site title, description | `index.html` `<title>` / `<meta name="description">` |
-| Colours and type | `web/styles.css` `:root` block — the same tokens the desktop app uses |
-| Logo and product art | `web/assets/` — same filenames, any image |
+| Colours and type | `experience.css` `:root` block — the website design tokens |
+| Logo and product art | `assets/` — same filenames, any image |
 
 To rename the app: `index.html` (`.brand h1`, `<title>`) and `assets/mark.png`.
 

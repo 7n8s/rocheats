@@ -12,3 +12,6 @@
 
 /experience.css
   Cache-Control: public, max-age=300
+
+/console.css
+  Cache-Control: public, max-age=300

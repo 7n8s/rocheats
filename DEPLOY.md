@@ -18,7 +18,7 @@ To update later: same project → **Create new deployment** → drag the folder 
 Old versions stay available and roll back in one click.
 
 > Drag the folder itself, not the zip. The uploader wants `index.html`,
-> `experience.css`, `app.js` and `assets/` at the top level.
+> `experience.css`, `console.css`, `app.js` and `assets/` at the top level.
 
 ---
 
@@ -76,7 +76,7 @@ Everything you would want to change is near the top of `app.js`:
 | Accent presets | `ACCENTS` array |
 | Default check interval, notification default | `settings` fallback object |
 | Site title, description | `index.html` `<title>` / `<meta name="description">` |
-| Colours and type | `experience.css` `:root` block — the website design tokens |
+| Colours and type | `experience.css` and `console.css` — the website design tokens |
 | Logo and product art | `assets/` — same filenames, any image |
 
 To rename the app: `index.html` (`.brand h1`, `<title>`) and `assets/mark.png`.

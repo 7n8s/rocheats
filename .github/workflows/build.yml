@@ -19,7 +19,7 @@ jobs:
         run: |
           set -euo pipefail
           node --check app.js
-          zip -qr RoCheatsMonitor-web.zip index.html experience.css console.css minimal.css open-layout.css app.js assets
+          zip -qr RoCheatsMonitor-web.zip index.html remodel.css app.js assets
           unzip -t RoCheatsMonitor-web.zip
       - uses: actions/upload-artifact@v4
         with:

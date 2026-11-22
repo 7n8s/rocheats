@@ -9,42 +9,41 @@
 <meta name="theme-color" content="#0b1111">
 <link rel="icon" href="assets/mark.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/mark.png">
-<link rel="stylesheet" href="workspace.css?v=1">
+<link rel="stylesheet" href="workspace.css?v=2">
 </head>
 <body>
 <header class="titlebar">
   <div class="header-inner">
     <div class="brand"><img class="mark" src="assets/mark.png" alt="" width="38" height="38"><div><h1>RoCheats <span>Monitor</span></h1><p>STATUS CHECKER</p></div></div>
-    <nav class="site-nav" aria-label="Site sections"><div class="site-nav-inner">
-      <a href="#overview" aria-current="location">Overview</a>
-      <a href="#products">Products</a>
-      <a href="#shop">Shop</a>
-      <a href="#faq">FAQ</a>
-    </div></nav>
     <div class="header-actions"><span class="live" id="livePill"><i></i>LIVE</span></div>
   </div>
 </header>
+<div class="app-shell"><aside class="side-rail">    <nav class="site-nav" aria-label="Site sections"><p class="side-label">MONITOR <span>●</span></p><div class="site-nav-inner">
+      <a href="#overview" aria-current="location"><span aria-hidden="true">◫</span> Overview</a>
+      <a href="#products"><span aria-hidden="true">▤</span> Products</a>
+      <a href="#shop"><span aria-hidden="true">◇</span> Shop</a>
+      <a href="#faq"><span aria-hidden="true">ⓘ</span> Help & FAQ</a>
+    </div></nav>
+<div class="rail-note"><span class="rail-dot"></span><b>STATUS MONITOR</b><p>Live information, all in one place.</p><small>Data from WEAO & Roblox</small></div></aside>
 <main id="main">
   <section class="checker-section" id="overview" aria-label="Status checker">
-    <div class="signal-intro"><div><p class="signal-eyebrow">ROCHEATS STATUS CHECKER</p><h2>Overview</h2><p class="signal-description">A live summary of the products you follow.</p></div></div>
-  <section class="hero" id="hero" aria-label="Status overview">
-    <div class="meter-wrap" aria-hidden="true"><div class="status-meter" id="statusMeter"><div class="meter-center"><b id="statusMeterText">—</b><span>reported updated</span></div></div></div>
-    <div class="hero-primary">
-      <div class="hero-primary-top"><span class="hero-kicker"><span class="hero-kicker-mark"></span> STATUS</span><span class="hero-feed" id="heroFeed"><span class="hero-feed-dot"></span><span id="heroFeedText">CHECKING</span></span></div>
-      <div class="hero-primary-main"><p class="hero-overline">LATEST CHECK</p><h2 id="headline">Checking…</h2><p class="meta" id="meta">Reading the feed…</p></div>
-      <div class="hero-primary-bottom"><button class="btn btn-ghost hero-check" id="checkBtn"><svg class="spin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/></svg><span>Check now</span></button><span class="hero-source">SOURCE <span aria-hidden="true">/</span> WEAO</span></div>
-    </div>
-    <div class="hero-breakdown">
-      <div class="breakdown-head"><span>SUMMARY</span><span id="heroReported">— REPORTED</span></div>
+    <div class="signal-intro hero-intro"><p class="signal-eyebrow">ROCHEATS STATUS CHECKER</p><h2>Executor status,<br>monitored in <span>real time.</span></h2><p class="signal-description">Track product updates and Roblox builds, all in one place.</p></div>
+    <section class="hero" id="hero" aria-label="Status overview">
+      <div class="hero-primary">
+        <div class="hero-primary-top"><span class="hero-kicker"><span class="hero-kicker-mark"></span> LIVE OVERVIEW</span><span class="hero-feed" id="heroFeed"><span class="hero-feed-dot"></span><span id="heroFeedText">CHECKING</span></span></div>
+        <div class="hero-primary-main"><p class="hero-overline">LATEST CHECK</p><h2 id="headline">Checking…</h2><p class="meta" id="meta">Reading the feed…</p></div>
+        <div class="hero-primary-bottom"><button class="btn btn-ghost hero-check" id="checkBtn"><svg class="spin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/></svg><span>Check now</span></button><span class="hero-source">SOURCE / WEAO</span></div>
+      </div>
+      <div class="meter-wrap" aria-hidden="true"><div class="status-meter" id="statusMeter"><div class="meter-center"><b id="statusMeterText">—</b><span>reported updated</span></div></div></div>
+    </section>
+    <div class="hero-breakdown"><div class="breakdown-head"><span>STATUS AT A GLANCE</span><span id="heroReported">— REPORTED</span></div>
       <ul class="stats" id="stats">
         <li><span class="stat-label"><span class="metric-icon metric-up" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9.3 18.5 3.8 13l2.3-2.3 3.2 3.2 8.6-8.6 2.3 2.3-10.9 10.9Z"/></svg></span>Updated</span><b>—</b></li>
         <li><span class="stat-label"><span class="metric-icon metric-stale" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path class="icon-cut" d="M12 6.8V12l3.5 2.1"/></svg></span>Stale</span><b>—</b></li>
         <li><span class="stat-label"><span class="metric-icon metric-detected" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.7 4.6 5.8v5.5c0 4.3 2.7 7.8 7.4 10 4.7-2.2 7.4-5.7 7.4-10V5.8L12 2.7Z"/><path class="icon-cut" d="M12 7.4v5.2m0 3.2v.1"/></svg></span>Detected</span><b>—</b></li>
         <li><span class="stat-label"><span class="metric-icon metric-behind" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10.5 3.2h3v9.3l3-3 2.1 2.1L12 18.2l-6.6-6.6 2.1-2.1 3 3V3.2ZM4.5 19.3h15v2h-15z"/></svg></span>Behind Roblox</span><b>—</b></li>
-      </ul>
-    </div>
+      </ul></div>
     <div class="rbx" id="rbx" hidden><span class="rbx-indicator"><i class="dot" id="rbxDot"></i><span class="caps">ROBLOX BUILD</span></span><b id="rbxVersion">—</b><span class="right" id="rbxCurrent">—</span></div>
-  </section>
   </section>
   <section class="products-section tracker-workspace" id="products" aria-label="Product tracker">
   <div class="list-heading"><div><p class="eyebrow">LIVE STATUS</p><h2>Products<span class="heading-dot" aria-hidden="true"></span></h2><p class="section-intro">Versions and update status from WEAO.</p></div><span class="count" id="count">9 of 9 products</span></div>
@@ -55,6 +54,10 @@
   <div class="empty" id="empty" hidden><p><b id="emptyTitle">Can’t reach the feed</b></p><p id="emptyBody">Check your connection and try again.</p><div class="empty-actions"><button class="btn btn-accent" id="retryBtn">Retry</button><a class="link" href="?demo=1">Preview with sample data</a></div></div>
   </div>
   </section>
+  <aside class="dashboard-aside" aria-label="Monitor information">
+    <section class="info-panel"><p class="eyebrow">MONITOR / INFORMATION</p><h3>About the feed</h3><p>Status and version information is sourced from WEAO. Roblox build information comes from Roblox.</p><div class="info-line"><span>Source</span><b>WEAO</b></div><div class="info-line"><span>Checks</span><b>While this tab is open</b></div><div class="info-line"><span>Detection</span><b>Shown when reported</b></div></section>
+    <section class="info-panel"><p class="eyebrow">MAKE IT YOURS</p><h3>Your monitor</h3><p>Choose your colours, adjust the layout, and configure check intervals in Customize.</p><span class="info-tag">GLASS INTERFACE</span></section>
+  </aside>
   <section id="shop" class="shop-section" aria-labelledby="shop-title">
     <div class="shop-heading"><div><p class="eyebrow accent">ROCHEATS</p><h2 id="shop-title">Shop<span class="accent">.</span></h2><p>Explore products on RoCheats.</p></div><span class="shop-index">ROCHEATS / STORE</span></div>
     <div class="shop-grid">
@@ -80,7 +83,7 @@
     <p class="faq-important"><strong>IMPORTANT:</strong> Please check the available information and requirements for your executor before purchasing.</p>
   </section>
   <footer class="foot"><span>Status from <a href="https://weao.xyz" target="_blank" rel="noopener">WEAO</a> · Roblox build from <a href="https://clientsettingscdn.roblox.com" target="_blank" rel="noopener">Roblox</a></span><span id="footNote">Checks only while this tab is open <span class="footer-dot" aria-hidden="true"></span></span></footer>
-</main>
+</main></div>
 <div class="scrim" id="scrim" hidden></div>
 <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" hidden>
   <div class="sheet-head"><div><p class="eyebrow accent">MAKE IT YOURS</p><h2 id="settingsTitle">Customize</h2><p>Set the mood. Keep the clarity.</p></div><button class="icon-btn close" id="closeBtn" aria-label="Close settings"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -99,6 +102,6 @@
 <button class="settings-trigger" id="settingsBtn" aria-label="Open settings" aria-expanded="false" aria-controls="sheet"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 17h16M9 4v6M15 14v6"/></svg><span>Customize</span></button>
 <div class="maker-credit">MADE BY <strong>VOR</strong></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js?v=38"></script>
+<script src="app.js?v=39"></script>
 </body>
 </html>

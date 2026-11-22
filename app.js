@@ -166,27 +166,30 @@
     visibleAtTop.forEach((node) => node.classList.add('has-entered'));
   }
 
-  // Four distinct views share one live feed; their URLs remain linkable.
+  // The monitor combines overview and products; store and help remain separate.
   function setupViews() {
-    const views = [...document.querySelectorAll('.checker-section, .products-section, .shop-section, .faq-section')];
+    const sections = [...document.querySelectorAll('.checker-section, .products-section, .shop-section, .faq-section')];
     const links = [...document.querySelectorAll('.site-nav a')];
-    const valid = new Set(views.map((view) => view.id));
-    let current = '';
+    const ids = new Set(sections.map((section) => section.id));
+    const info = $('.dashboard-aside');
     const show = (id, scroll = true) => {
-      id = valid.has(id) ? id : 'overview';
-      if (id === current) return;
-      current = id;
-      views.forEach((view) => { view.hidden = view.id !== id; });
+      id = ids.has(id) ? id : 'overview';
+      const monitor = id === 'overview' || id === 'products';
+      sections.forEach((section) => { section.hidden = monitor ? !['overview', 'products'].includes(section.id) : section.id !== id; });
+      info.hidden = !monitor;
       links.forEach((link) => {
         if (link.getAttribute('href') === `#${id}`) link.setAttribute('aria-current', 'page');
         else link.removeAttribute('aria-current');
       });
-      if (scroll) window.scrollTo({top: 0, behavior: 'instant'});
+      if (scroll) requestAnimationFrame(() => {
+        if (id === 'products') document.getElementById('products').scrollIntoView({behavior:'instant', block:'start'});
+        else window.scrollTo({top:0, behavior:'instant'});
+      });
       window.dispatchEvent(new Event('viewchange'));
     };
     links.forEach((link) => link.addEventListener('click', (event) => {
       const id = link.getAttribute('href').slice(1);
-      if (!valid.has(id)) return;
+      if (!ids.has(id)) return;
       event.preventDefault();
       if (location.hash !== `#${id}`) history.pushState(null, '', `#${id}`);
       show(id);
@@ -194,22 +197,19 @@
     const sync = () => show(location.hash.slice(1));
     window.addEventListener('popstate', sync);
     window.addEventListener('hashchange', sync);
-    show(location.hash.slice(1));
+    show(location.hash.slice(1), location.hash === '#products');
   }
 
-  // Keep already-revealed elements visible within the active view.
+  // Keep entered widgets visible throughout the currently displayed view.
   function setupActiveSection() {
     const sections = [...document.querySelectorAll('.checker-section, .products-section, .shop-section, .faq-section')];
-    let active = null, frame = 0;
+    let frame = 0;
     const update = () => {
       frame = 0;
-      const next = sections.find((section) => !section.hidden) || null;
-      if (next !== active) {
-        if (active) active.classList.remove('is-active-section');
-        active = next;
-        if (active) active.classList.add('is-active-section');
-      }
-      keepVisibleAtTop(active);
+      sections.forEach((section) => {
+        section.classList.toggle('is-active-section', !section.hidden);
+        if (!section.hidden) keepVisibleAtTop(section);
+      });
     };
     const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
     window.addEventListener('scroll', schedule, { passive: true });
@@ -543,7 +543,7 @@
         list.appendChild(item);
         observeReveal(item, key, Math.min(i % 3, 2) * 45, rowRevealObserver);
       }
-      requestAnimationFrame(() => keepVisibleAtTop($('.is-active-section')));
+      requestAnimationFrame(() => document.querySelectorAll('.is-active-section').forEach(keepVisibleAtTop));
     }
 
     $('#empty').hidden = !(state.error && !live.length);

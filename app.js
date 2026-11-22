@@ -129,7 +129,7 @@
       createViewportObservers();
       document.querySelectorAll('[data-reveal-key]').forEach((node) => {
         const key = node.dataset.revealKey;
-        if (key === 'header' || key === 'intro') return;
+        if (key === 'header' || key === 'intro' || key === 'roblox-build') return;
         (key.startsWith('row:') || key.startsWith('faq:') ? rowRevealObserver : revealObserver).observe(node);
       });
     }, { passive: true });
@@ -141,13 +141,14 @@
       ['.toolbar', 'filters', 240], ['.shop-heading', 'shop-heading', 0],
       ['.shop-all', 'shop-all', 0], ['.shop-disclaimer', 'shop-note', 0],
       ['.faq-heading', 'faq-heading', 0], ['.faq-important', 'faq-important', 0],
-      ['.foot', 'footer', 0],
+      ['.foot', 'footer', 0], ['.monitor-side', 'monitor-side', 0],
     ].forEach(([selector, key, delay]) => observeReveal($(selector), key, delay));
     document.querySelectorAll('.stats li').forEach((stat, i) =>
       observeReveal(stat, `stat:${i}`, 180 + i * 60));
     document.querySelectorAll('.chip').forEach((chip, i) =>
       observeReveal(chip, `filter:${i}`, 90 + i * 60));
-    observeReveal($('#rbx'), 'roblox-build', 160);
+    observeReveal($('#rbx'), 'roblox-build', 160, headerRevealObserver);
+    document.querySelectorAll('.info-panel').forEach((panel, i) => observeReveal(panel, `info:${i}`, i * 80));
     document.querySelectorAll('.shop-card').forEach((card, i) =>
       observeReveal(card, `shop:${card.dataset.shop}`, i * 80));
     document.querySelectorAll('.faq-card').forEach((card, i) =>
@@ -169,7 +170,7 @@
   // The monitor combines overview and products; store and help remain separate.
   function setupViews() {
     const sections = [...document.querySelectorAll('.checker-section, .products-section, .shop-section, .faq-section')];
-    const links = [...document.querySelectorAll('.site-nav a')];
+    const links = [...document.querySelectorAll('.site-nav a, .top-nav a')];
     const ids = new Set(sections.map((section) => section.id));
     const info = $('.dashboard-aside');
     const show = (id, scroll = true) => {
@@ -177,6 +178,7 @@
       const monitor = id === 'overview' || id === 'products';
       sections.forEach((section) => { section.hidden = monitor ? !['overview', 'products'].includes(section.id) : section.id !== id; });
       info.hidden = !monitor;
+      $('.monitor-side').hidden = !monitor;
       links.forEach((link) => {
         if (link.getAttribute('href') === `#${id}`) link.setAttribute('aria-current', 'page');
         else link.removeAttribute('aria-current');
@@ -655,7 +657,10 @@
       stateCell.appendChild(badge);
     }
 
-    li.append(tile, mid, stateCell);
+    const versionCell = el('div', 'table-version', item && item.live ? (item.version || '—') : (product.key === 'codex' ? 'Unverified' : '—'));
+    const buildCell = el('div', 'table-build', item && item.live && item.rbx ? item.rbx.replace(/^version-/, '').slice(0, 10) : '—');
+    if (item && item.live && item.rbx) buildCell.title = item.rbx;
+    li.append(tile, mid, versionCell, buildCell, stateCell);
     return li;
   }
 

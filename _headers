@@ -10,5 +10,5 @@
 /app.js
   Cache-Control: public, max-age=300
 
-/remodel.css
+/workspace.css
   Cache-Control: public, max-age=300

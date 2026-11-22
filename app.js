@@ -166,48 +166,55 @@
     visibleAtTop.forEach((node) => node.classList.add('has-entered'));
   }
 
-  // Keep the section currently occupying the middle of the screen intact.
-  // Items below the viewport still reveal individually as they come into view.
-  function setupActiveSection() {
-    const sections = [...document.querySelectorAll('.checker-section, .shop-section, .faq-section')];
-    let active = null, frame = 0;
-    const navLinks = [...document.querySelectorAll('.site-nav a')];
-    let currentNav = '';
-    const updateNav = (section, middle) => {
-      if (!section) return;
-      const target = section.id === 'shop' ? 'shop' : section.id === 'faq' ? 'faq' :
-        ($('#products').getBoundingClientRect().top <= Math.min(90, middle) ? 'products' : 'overview');
-      if (currentNav === target) return;
-      currentNav = target;
-      for (const link of navLinks) {
-        if (link.getAttribute('href') === `#${target}`) link.setAttribute('aria-current', 'location');
+  // Four distinct views share one live feed; their URLs remain linkable.
+  function setupViews() {
+    const views = [...document.querySelectorAll('.checker-section, .products-section, .shop-section, .faq-section')];
+    const links = [...document.querySelectorAll('.site-nav a')];
+    const valid = new Set(views.map((view) => view.id));
+    let current = '';
+    const show = (id, scroll = true) => {
+      id = valid.has(id) ? id : 'overview';
+      if (id === current) return;
+      current = id;
+      views.forEach((view) => { view.hidden = view.id !== id; });
+      links.forEach((link) => {
+        if (link.getAttribute('href') === `#${id}`) link.setAttribute('aria-current', 'page');
         else link.removeAttribute('aria-current');
-      }
+      });
+      if (scroll) window.scrollTo({top: 0, behavior: 'instant'});
+      window.dispatchEvent(new Event('viewchange'));
     };
+    links.forEach((link) => link.addEventListener('click', (event) => {
+      const id = link.getAttribute('href').slice(1);
+      if (!valid.has(id)) return;
+      event.preventDefault();
+      if (location.hash !== `#${id}`) history.pushState(null, '', `#${id}`);
+      show(id);
+    }));
+    const sync = () => show(location.hash.slice(1));
+    window.addEventListener('popstate', sync);
+    window.addEventListener('hashchange', sync);
+    show(location.hash.slice(1));
+  }
+
+  // Keep already-revealed elements visible within the active view.
+  function setupActiveSection() {
+    const sections = [...document.querySelectorAll('.checker-section, .products-section, .shop-section, .faq-section')];
+    let active = null, frame = 0;
     const update = () => {
       frame = 0;
-      const middle = innerHeight / 2;
-      let next = sections.find((section) => {
-        const r = section.getBoundingClientRect();
-        return r.top <= middle && r.bottom > middle;
-      });
-      if (!next) {
-        next = sections.reduce((best, section) => {
-          const r = section.getBoundingClientRect();
-          const visible = Math.max(0, Math.min(innerHeight, r.bottom) - Math.max(0, r.top));
-          return visible > best.visible ? { section, visible } : best;
-        }, { section: null, visible: 0 }).section;
+      const next = sections.find((section) => !section.hidden) || null;
+      if (next !== active) {
+        if (active) active.classList.remove('is-active-section');
+        active = next;
+        if (active) active.classList.add('is-active-section');
       }
-      updateNav(next, middle);
-      if (next === active) { keepVisibleAtTop(active); return; }
-      if (active) active.classList.remove('is-active-section');
-      active = next;
-      if (active) active.classList.add('is-active-section');
       keepVisibleAtTop(active);
     };
     const schedule = () => { if (!frame) frame = requestAnimationFrame(update); };
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule, { passive: true });
+    window.addEventListener('viewchange', schedule);
     update();
   }
 
@@ -458,6 +465,9 @@
     const behind = live.filter((x) => x.item.rbx && state.roblox.upload && x.item.rbx !== state.roblox.upload).length;
 
     $('#headline').textContent = live.length ? `${up} of ${live.length} updated` : (state.checking ? 'Checking…' : 'No data yet');
+    const percent = live.length ? Math.round(up * 100 / live.length) : 0;
+    $('#statusMeter').style.setProperty('--progress', `${percent}%`);
+    $('#statusMeterText').textContent = live.length ? `${percent}%` : '—';
     $('#heroReported').textContent = `${live.length || '—'} REPORTED`;
     const feedState = state.demo ? 'SAMPLE DATA' : (state.error ? 'FEED OFFLINE' : (state.checkedAt ? 'FEED LIVE' : 'CHECKING'));
     $('#heroFeedText').textContent = feedState;
@@ -1019,6 +1029,7 @@
   // ------------------------------------------------------------------- start
   applySettings();
   buildSettings();
+  setupViews();
   setupReveals();
   setupActiveSection();
   render();

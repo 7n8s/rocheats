@@ -3,7 +3,7 @@
 A static RoCheats status monitor with live WEAO status and Roblox client updates. No server or build step is required.
 
 - `index.html` — page markup
-- `remodel.css` — responsive appearance and animations
+- `workspace.css` — responsive appearance and animations
 - `app.js` — status polling, filters, settings and music control
 - `assets/` — logos and background audio
 - `_headers` — optional headers for compatible hosts

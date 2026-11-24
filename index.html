@@ -9,13 +9,14 @@
 <meta name="theme-color" content="#0b1111">
 <link rel="icon" href="assets/mark.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/mark.png">
-<link rel="stylesheet" href="workspace.css?v=3">
+<link rel="stylesheet" href="workspace.css?v=4">
 </head>
 <body>
 <header class="titlebar">
   <div class="header-inner">
     <div class="brand"><img class="mark" src="assets/mark.png" alt="" width="38" height="38"><div><h1>RoCheats <span>Monitor</span></h1><p>STATUS CHECKER</p></div></div>
     <nav class="top-nav" aria-label="Main navigation"><a href="#overview" aria-current="page">Overview</a><a href="#products">Products</a><a href="#shop">Shop</a><a href="#faq">Help</a></nav>
+    <label class="header-search"><span aria-hidden="true">⌕</span><input type="search" class="product-search" placeholder="Search executors or versions" aria-label="Search executors or versions"></label>
     <div class="header-actions"><span class="live" id="livePill"><i></i>LIVE</span></div>
   </div>
 </header>
@@ -33,33 +34,33 @@
     <section class="hero" id="hero" aria-label="Status overview">
       <div class="hero-primary">
         <div class="hero-primary-top"><span class="hero-kicker"><span class="hero-kicker-mark"></span> LIVE OVERVIEW</span><span class="hero-feed" id="heroFeed"><span class="hero-feed-dot"></span><span id="heroFeedText">CHECKING</span></span></div>
-        <div class="hero-primary-main"><p class="hero-overline">LATEST CHECK</p><h2 id="headline">Checking…</h2><p class="meta" id="meta">Reading the feed…</p></div>
-        <div class="hero-primary-bottom"><button class="btn btn-ghost hero-check" id="checkBtn"><svg class="spin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/></svg><span>Check now</span></button><span class="hero-source">SOURCE / WEAO</span></div>
+        <div class="hero-primary-main"><div class="hero-value"><span>REPORTED</span><b id="heroTotal">—</b><small>tracked by feed</small></div><div class="hero-value"><span>UPDATED</span><b id="heroUp">—</b><small>reported updated</small></div><h2 id="headline" class="visually-hidden">Checking…</h2></div>
+        <div class="hero-primary-bottom"><p class="meta" id="meta">Reading the feed…</p><button class="btn btn-ghost hero-check" id="checkBtn"><svg class="spin" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/></svg><span>Check now</span></button><span class="hero-source">SOURCE / WEAO</span></div>
       </div>
-      <div class="meter-wrap" aria-hidden="true"><div class="status-meter" id="statusMeter"><div class="meter-center"><b id="statusMeterText">—</b><span>reported updated</span></div></div></div>
+      <div class="meter-wrap" aria-hidden="true"><div class="status-meter" id="statusMeter"><div class="meter-center"><b id="statusMeterText">—</b><span>UPDATE RATE</span></div></div></div>
     </section></div>
     <div class="hero-breakdown"><div class="breakdown-head"><span>STATUS AT A GLANCE</span><span id="heroReported">— REPORTED</span></div>
       <ul class="stats" id="stats">
-        <li><span class="stat-label"><span class="metric-icon metric-up" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9.3 18.5 3.8 13l2.3-2.3 3.2 3.2 8.6-8.6 2.3 2.3-10.9 10.9Z"/></svg></span>Updated</span><b>—</b></li>
-        <li><span class="stat-label"><span class="metric-icon metric-stale" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path class="icon-cut" d="M12 6.8V12l3.5 2.1"/></svg></span>Stale</span><b>—</b></li>
-        <li><span class="stat-label"><span class="metric-icon metric-detected" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.7 4.6 5.8v5.5c0 4.3 2.7 7.8 7.4 10 4.7-2.2 7.4-5.7 7.4-10V5.8L12 2.7Z"/><path class="icon-cut" d="M12 7.4v5.2m0 3.2v.1"/></svg></span>Detected</span><b>—</b></li>
-        <li><span class="stat-label"><span class="metric-icon metric-behind" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10.5 3.2h3v9.3l3-3 2.1 2.1L12 18.2l-6.6-6.6 2.1-2.1 3 3V3.2ZM4.5 19.3h15v2h-15z"/></svg></span>Behind Roblox</span><b>—</b></li>
+        <li><span class="stat-label"><span class="metric-icon metric-up" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9.3 18.5 3.8 13l2.3-2.3 3.2 3.2 8.6-8.6 2.3 2.3-10.9 10.9Z"/></svg></span>Updated</span><b>—</b><div class="stat-track"><i></i></div><small class="stat-foot">Waiting for data</small></li>
+        <li><span class="stat-label"><span class="metric-icon metric-stale" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path class="icon-cut" d="M12 6.8V12l3.5 2.1"/></svg></span>Stale</span><b>—</b><div class="stat-track"><i></i></div><small class="stat-foot">Waiting for data</small></li>
+        <li><span class="stat-label"><span class="metric-icon metric-detected" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.7 4.6 5.8v5.5c0 4.3 2.7 7.8 7.4 10 4.7-2.2 7.4-5.7 7.4-10V5.8L12 2.7Z"/><path class="icon-cut" d="M12 7.4v5.2m0 3.2v.1"/></svg></span>Detected</span><b>—</b><div class="stat-track"><i></i></div><small class="stat-foot">Waiting for data</small></li>
+        <li><span class="stat-label"><span class="metric-icon metric-behind" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10.5 3.2h3v9.3l3-3 2.1 2.1L12 18.2l-6.6-6.6 2.1-2.1 3 3V3.2ZM4.5 19.3h15v2h-15z"/></svg></span>Behind Roblox</span><b>—</b><div class="stat-track"><i></i></div><small class="stat-foot">Waiting for data</small></li>
       </ul></div>
 
   </section>
   <section class="products-section tracker-workspace" id="products" aria-label="Product tracker">
   <div class="list-heading"><div><p class="eyebrow">LIVE STATUS</p><h2>Live Executor Status<span class="heading-dot" aria-hidden="true"></span></h2><p class="section-intro">Versions and update status from WEAO.</p></div><span class="count" id="count">9 of 9 products</span></div>
   <div class="tracker-content">
-  <div class="toolbar"><div class="chips" role="tablist" aria-label="Filter products"><button role="tab" aria-selected="true" class="chip is-on" data-filter="0">All products</button><button role="tab" aria-selected="false" class="chip" data-filter="1">Updated</button><button role="tab" aria-selected="false" class="chip" data-filter="2">Not updated</button></div><span class="toolbar-note">DATA FROM WEAO <span>↗</span></span></div>
+  <div class="toolbar"><label class="inline-search"><span aria-hidden="true">⌕</span><input type="search" class="product-search" placeholder="Search executors or versions" aria-label="Search executors or versions"></label><div class="chips" role="tablist" aria-label="Filter products"><button role="tab" aria-selected="true" class="chip is-on" data-filter="0">All products</button><button role="tab" aria-selected="false" class="chip" data-filter="1">Updated</button><button role="tab" aria-selected="false" class="chip" data-filter="2">Not updated</button></div><span class="toolbar-note">DATA FROM WEAO <span>↗</span></span></div>
   <div class="tracker-labels" aria-hidden="true"><span>EXECUTOR</span><span>VERSION</span><span>ROBLOX BUILD</span><span>STATUS</span></div>
-  <ul class="rows" id="rows" aria-live="polite"></ul>
+  <ul class="rows" id="rows" aria-live="polite"></ul><p class="no-results" id="noResults" hidden>No products match your search and filters.</p>
   <div class="empty" id="empty" hidden><p><b id="emptyTitle">Can’t reach the feed</b></p><p id="emptyBody">Check your connection and try again.</p><div class="empty-actions"><button class="btn btn-accent" id="retryBtn">Retry</button><a class="link" href="?demo=1">Preview with sample data</a></div></div>
   </div>
   </section>
-  <section class="monitor-side"><div class="monitor-side-head"><h3>Live status</h3><span><i></i> WEAO</span></div><p>Product status is checked automatically while this tab is open.</p><div class="monitor-side-line"><span class="side-icon">✓</span><div><b>Update status</b><small>Reported by WEAO</small></div></div><div class="monitor-side-line"><span class="side-icon">!</span><div><b>Detection reports</b><small>Shown beside a product’s status</small></div></div><div class="monitor-side-line"><span class="side-icon">↻</span><div><b>Roblox build</b><small>Compared when available</small></div></div><p class="monitor-side-note">Use Customize to change how often the monitor checks.</p></section>
-  <aside class="dashboard-aside" aria-label="Monitor information">
-    <section class="info-panel"><p class="eyebrow">MONITOR / INFORMATION</p><h3>About the feed</h3><p>Status and version information is sourced from WEAO. Roblox build information comes from Roblox.</p><div class="info-line"><span>Source</span><b>WEAO</b></div><div class="info-line"><span>Checks</span><b>While this tab is open</b></div><div class="info-line"><span>Detection</span><b>Shown when reported</b></div></section>
-    <section class="info-panel"><p class="eyebrow">MAKE IT YOURS</p><h3>Your monitor</h3><p>Choose your colours, adjust the layout, and configure check intervals in Customize.</p><span class="info-tag">GLASS INTERFACE</span></section>
+  <section class="monitor-side"><div class="monitor-side-head"><h3>Feed snapshot</h3><span id="snapshotFeed"><i></i> WEAO</span></div><p>Latest reported product states.</p><div id="feedSnapshot" class="feed-snapshot"><p class="snapshot-empty">Waiting for the feed…</p></div><div class="snapshot-foot">Updates are shown as reported, not as a safety guarantee.</div></section>
+  <aside class="dashboard-aside" aria-label="Monitor information and quick settings">
+    <section class="info-panel feed-panel"><div class="panel-title"><h3>Roblox build</h3><span class="panel-chip">ROBLOX</span></div><div class="build-timeline"><div class="timeline-item"><i></i><div><b>Current client</b><strong id="timelineBuild">Checking…</strong><small>Version reported by Roblox</small></div></div><div class="timeline-item"><i></i><div><b>Compatibility</b><strong id="timelineCompat">Checking…</strong><small>Compared with reported product builds</small></div></div><div class="timeline-item"><i></i><div><b>Status feed</b><strong id="timelineFeed">Checking…</strong><small>WEAO product status</small></div></div></div><span class="panel-foot">Live information · no patch predictions</span></section>
+    <section class="info-panel personalize-panel"><div class="panel-title"><h3>Personalize</h3><span class="panel-chip">QUICK SETTINGS</span></div><p class="quick-label">ACCENT</p><div class="quick-accents" id="quickAccents"></div><div class="quick-density"><span>Density</span><div><button type="button" data-quick-density="comfortable">Comfortable</button><button type="button" data-quick-density="compact">Compact</button></div></div><button type="button" id="quickCustomize" class="quick-customize">More customization <span>→</span></button><div class="quick-music"><span class="music-art" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18V5l9-2v13M9 8l9-2"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="15.5" cy="16" r="2.5"/></svg></span><div><b>Whole Team Straight</b><small>ovine hall · background music</small></div></div></section>
   </aside>
   <section id="shop" class="shop-section" aria-labelledby="shop-title">
     <div class="shop-heading"><div><p class="eyebrow accent">ROCHEATS</p><h2 id="shop-title">Shop<span class="accent">.</span></h2><p>Explore products on RoCheats.</p></div><span class="shop-index">ROCHEATS / STORE</span></div>
@@ -105,6 +106,6 @@
 <button class="settings-trigger" id="settingsBtn" aria-label="Open settings" aria-expanded="false" aria-controls="sheet"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 17h16M9 4v6M15 14v6"/></svg><span>Customize</span></button>
 <div class="maker-credit">MADE BY <strong>VOR</strong></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script src="app.js?v=40"></script>
+<script src="app.js?v=41"></script>
 </body>
 </html>

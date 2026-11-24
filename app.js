@@ -46,6 +46,7 @@
   // ------------------------------------------------------------------ state
   const state = {
     filter: 0,
+    search: '',
     items: new Map(),
     roblox: { version: '', upload: '', checkedAt: 0 },
     checking: false,
@@ -204,7 +205,7 @@
 
   // Keep entered widgets visible throughout the currently displayed view.
   function setupActiveSection() {
-    const sections = [...document.querySelectorAll('.checker-section, .products-section, .shop-section, .faq-section')];
+    const sections = [...document.querySelectorAll('.checker-section, .products-section, .shop-section, .faq-section, .monitor-side, .dashboard-aside')];
     let frame = 0;
     const update = () => {
       frame = 0;
@@ -464,9 +465,13 @@
     const live = items.filter((x) => x.item && x.item.live);
     const up = live.filter((x) => x.item.updated).length;
     const det = live.filter((x) => x.item.detected === true).length;
-    const behind = live.filter((x) => x.item.rbx && state.roblox.upload && x.item.rbx !== state.roblox.upload).length;
+    const comparable = state.roblox.upload ? live.filter((x) => !!x.item.rbx) : [];
+    const behind = comparable.filter((x) => x.item.rbx !== state.roblox.upload).length;
+    const detectionKnown = live.filter((x) => typeof x.item.detected === 'boolean').length;
 
     $('#headline').textContent = live.length ? `${up} of ${live.length} updated` : (state.checking ? 'Checking…' : 'No data yet');
+    $('#heroTotal').textContent = live.length || '—';
+    $('#heroUp').textContent = live.length ? up : '—';
     const percent = live.length ? Math.round(up * 100 / live.length) : 0;
     $('#statusMeter').style.setProperty('--progress', `${percent}%`);
     $('#statusMeterText').textContent = live.length ? `${percent}%` : '—';
@@ -477,9 +482,29 @@
     $('#heroFeed').classList.toggle('is-checking', !state.checkedAt && !state.demo && !state.error);
 
     const stats = $('#stats').children;
-    [up, live.length - up, det, behind].forEach((n, i) => {
-      stats[i].querySelector('b').textContent = live.length ? String(n) : '—';
+    const figures = [[up, live.length], [live.length - up, live.length], [det, detectionKnown], [behind, comparable.length]];
+    figures.forEach(([n, total], i) => {
+      stats[i].querySelector('b').textContent = total ? String(n) : '—';
+      stats[i].querySelector('.stat-track i').style.width = total ? `${Math.round(n / total * 100)}%` : '0%';
+      stats[i].querySelector('.stat-foot').textContent = total ? `${n} of ${total} ${i === 3 ? 'comparable builds' : 'reported'}` : 'No comparable data';
     });
+    $('#timelineBuild').textContent = state.roblox.version || (state.roblox.upload ? state.roblox.upload.replace(/^version-/, '') : 'Not available');
+    $('#timelineCompat').textContent = comparable.length ? `${behind} behind of ${comparable.length} compared` : 'No comparable builds';
+    $('#timelineFeed').textContent = state.demo ? 'Sample data' : state.error ? 'Feed offline' : state.checkedAt ? 'Feed connected' : 'Checking…';
+    $('#snapshotFeed').lastChild.textContent = state.demo ? ' SAMPLE' : state.error ? ' OFFLINE' : state.checkedAt ? ' WEAO' : ' CHECKING';
+    $('#snapshotFeed').classList.toggle('is-offline', !!state.error && !state.demo);
+    const snapshot = $('#feedSnapshot');
+    snapshot.replaceChildren();
+    if (!live.length) snapshot.appendChild(el('p', 'snapshot-empty', state.error ? 'Feed unavailable.' : 'Waiting for the feed…'));
+    for (const { product, item } of live.slice(0, 5)) {
+      const entry = el('div', 'snapshot-row');
+      const indicator = el('span', `snapshot-icon ${item.updated ? 'is-up' : 'is-down'}`, item.updated ? '✓' : '!');
+      const description = el('div', 'snapshot-copy');
+      description.append(el('b', '', product.name), el('small', '', item.version ? `Version ${item.version}` : 'Version not reported'));
+      const status = el('span', 'snapshot-state', item.updated ? 'Updated' : 'Not updated');
+      entry.append(indicator, description, status);
+      snapshot.appendChild(entry);
+    }
 
     paintMeta();
 
@@ -489,8 +514,8 @@
       strip.hidden = false;
       $('#rbxVersion').textContent = state.roblox.version || state.roblox.upload.replace('version-', '');
       const cur = $('#rbxCurrent');
-      cur.textContent = behind === 0
-        ? `${live.length} of ${live.length} current`
+      cur.textContent = !comparable.length ? 'No comparable builds' : behind === 0
+        ? `${comparable.length} of ${comparable.length} current`
         : `${behind} behind the live build`;
       cur.classList.toggle('is-behind', behind > 0);
       const dot = $('#rbxDot');
@@ -510,6 +535,7 @@
 
     // rows
     const shown = items.filter((x) => {
+      if (state.search && !`${x.product.name} ${x.item?.version || ''}`.toLowerCase().includes(state.search)) return false;
       if (!x.item) return state.filter === 0 || (state.filter === 1 && x.product.key === 'codex');
       if (state.filter === 1) return (x.item.live && x.item.updated) || (x.product.key === 'codex' && !x.item.live);
       if (state.filter === 2) return x.item.live && !x.item.updated;
@@ -519,12 +545,12 @@
     $('#count').textContent = `${shown.length} of ${PRODUCTS.length} products`;
 
     const sig = JSON.stringify([
-      state.filter,
+      state.filter, state.search,
       !!state.error,
       [...state.flash],
       shown.map((x) => (x.item
-        ? [x.item.live, x.item.updated, x.item.detected, x.item.detectionReason, x.item.version, x.item.at, x.item.rbx]
-        : 0)),
+        ? [x.product.key, x.item.live, x.item.updated, x.item.detected, x.item.detectionReason, x.item.version, x.item.at, x.item.rbx]
+        : [x.product.key])),
     ]);
     if (sig !== lastRows) {
       lastRows = sig;
@@ -548,6 +574,7 @@
       requestAnimationFrame(() => document.querySelectorAll('.is-active-section').forEach(keepVisibleAtTop));
     }
 
+    $('#noResults').hidden = shown.length > 0 || (state.error && !live.length);
     $('#empty').hidden = !(state.error && !live.length);
     $('#emptyTitle').textContent = 'Can’t reach the feed';
     $('#emptyBody').textContent = state.error;
@@ -735,6 +762,19 @@
       accents.appendChild(b);
     }
 
+    const quickAccents = $('#quickAccents');
+    for (const accent of ACCENTS) {
+      const button = el('button', 'quick-accent');
+      button.type = 'button'; button.dataset.quickAccent = accent;
+      button.style.background = accent; button.setAttribute('aria-label', `Accent ${accent}`);
+      button.addEventListener('click', () => document.querySelector(`#accents [data-accent="${accent}"]`).click());
+      quickAccents.appendChild(button);
+    }
+    for (const button of document.querySelectorAll('[data-quick-density]')) {
+      button.addEventListener('click', () => document.querySelector(`#densitySeg [data-density="${button.dataset.quickDensity}"]`).click());
+    }
+    $('#quickCustomize').addEventListener('click', openSheet);
+
     const intervals = $('#intervalSeg');
     intervals.textContent = '';
     for (const m of INTERVALS) {
@@ -827,6 +867,14 @@
     for (const b of document.querySelectorAll('#accents button')) {
       b.classList.toggle('is-on', b.dataset.accent === settings.accent);
       b.setAttribute('aria-pressed', String(b.dataset.accent === settings.accent));
+    }
+    for (const b of document.querySelectorAll('[data-quick-accent]')) {
+      const on = b.dataset.quickAccent === settings.accent;
+      b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on));
+    }
+    for (const b of document.querySelectorAll('[data-quick-density]')) {
+      const on = b.dataset.quickDensity === settings.density;
+      b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on));
     }
     for (const b of document.querySelectorAll('#themeSeg button')) {
       b.classList.toggle('is-on', b.dataset.theme === settings.theme);
@@ -1027,6 +1075,15 @@
         o.classList.toggle('is-on', on);
         o.setAttribute('aria-selected', String(on));
       }
+      render();
+    });
+  }
+
+  for (const input of document.querySelectorAll('.product-search')) {
+    input.addEventListener('input', () => {
+      state.search = input.value.trim().toLowerCase();
+      for (const other of document.querySelectorAll('.product-search')) if (other !== input) other.value = input.value;
+      if ($('#products').hidden) document.querySelector('.site-nav a[href="#products"]').click();
       render();
     });
   }
